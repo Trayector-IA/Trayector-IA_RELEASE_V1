@@ -8,92 +8,92 @@
 
   // ── DOM refs ──────────────────────────────────────────────────
   const messagesContainer = document.getElementById('messages-container');
-  const chatInput         = document.getElementById('chat-input');
-  const sendBtn           = document.getElementById('send-btn');
-  const progressBar       = document.getElementById('progress-bar');
-  const progressCurrent   = document.getElementById('progress-current');
-  const completionBanner  = document.getElementById('completion-banner');
-  const viewResultsBtn    = document.getElementById('view-results-btn');
-  const wordCountEl       = document.getElementById('word-count');
-  const resetBtn          = document.getElementById('reset-btn');
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  const progressBar = document.getElementById('progress-bar');
+  const progressCurrent = document.getElementById('progress-current');
+  const completionBanner = document.getElementById('completion-banner');
+  const viewResultsBtn = document.getElementById('view-results-btn');
+  const wordCountEl = document.getElementById('word-count');
+  const resetBtn = document.getElementById('reset-btn');
 
   // ── State ──────────────────────────────────────────────────────
-  let totalPreguntas  = window.TOTAL_PREGUNTAS || 10;
-  let indicePregunta  = 0;
-  let chatActive      = false;
-  let isProcessing    = false;
+  let totalPreguntas = window.TOTAL_PREGUNTAS || 10;
+  let indicePregunta = 0;
+  let chatActive = false;
+  let isProcessing = false;
 
   // ── Init ───────────────────────────────────────────────────────
-function init() {
+  function init() {
     disableInput(true);
-    
+
     // Si el modal no existe (porque ya inició sesión), arrancamos el test
     if (!document.getElementById('modal-acceso')) {
-        startSession();
+      startSession();
     }
   }
 
 
 
-window.validarAcceso = async function() {
+  window.validarAcceso = async function () {
     console.log("1. Botón presionado. Iniciando validación...");
-    
+
     const inputCodigo = document.getElementById('input-codigo');
     const inputPassword = document.getElementById('input-password');
-    
+
     if (!inputCodigo || !inputPassword) {
-        console.error("ERROR FATAL: No encuentro los cuadros de texto.");
-        return;
+      console.error("ERROR FATAL: No encuentro los cuadros de texto.");
+      return;
     }
 
     const usuarioId = inputCodigo.value.trim();
     const password = inputPassword.value.trim();
 
     if (!usuarioId) {
-        alert("Por favor, ingresa tu código.");
-        return;
+      alert("Por favor, ingresa tu código.");
+      return;
     }
 
     try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                usuario_id: usuarioId,
-                password: password 
-            })
-        });
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_id: usuarioId,
+          password: password
+        })
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (data.success) {
-            document.getElementById('modal-acceso').style.display = 'none';
-            
-            if (data.rol === 'estudiante') {
-                console.log("Acceso concedido. Iniciando sesión...");
-                await startSession(); // Aquí estaba el error del nombre
-            } else if (data.rol === 'admin') {
-                alert("Bienvenido, Administrador.");
-            }
-        } else {
-            alert(data.error);
+      if (data.success) {
+        document.getElementById('modal-acceso').style.display = 'none';
+
+        if (data.rol === 'estudiante') {
+          console.log("Acceso concedido. Iniciando sesión...");
+          await startSession(); // Aquí estaba el error del nombre
+        } else if (data.rol === 'admin') {
+          alert("Bienvenido, Administrador.");
         }
+      } else {
+        alert(data.error);
+      }
     } catch (error) {
-        console.error("Error crítico en la petición Fetch:", error);
-        alert("Ocurrió un error de red o de servidor.");
+      console.error("Error crítico en la petición Fetch:", error);
+      alert("Ocurrió un error de red o de servidor.");
     }
-};
+  };
   // ── API calls ──────────────────────────────────────────────────
 
-async function startSession() {
+  async function startSession() {
     try {
       // El cuerpo vacío {} evita que Flask lance el Error 400
-      const res  = await fetch('/api/start', { 
-          method: 'POST', 
-          headers: jsonHeaders(),
-          body: JSON.stringify({}) 
+      const res = await fetch('/api/start', {
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({})
       });
-      
+
       const data = await res.json();
 
       if (data.success) {
@@ -128,10 +128,10 @@ async function startSession() {
     const typingId = addTyping();
 
     try {
-      const res  = await fetch('/api/answer', {
-        method:  'POST',
+      const res = await fetch('/api/answer', {
+        method: 'POST',
         headers: jsonHeaders(),
-        body:    JSON.stringify({ respuesta: text }),
+        body: JSON.stringify({ respuesta: text }),
       });
       const data = await res.json();
 
@@ -176,18 +176,34 @@ async function startSession() {
   async function fetchResults() {
     const typingId = addTyping();
     try {
-      const res  = await fetch('/api/result', { method: 'POST', headers: jsonHeaders() });
+      const res = await fetch('/api/result', { method: 'POST', headers: jsonHeaders() });
       const data = await res.json();
       removeTyping(typingId);
 
-      if (data.success) {
+      // Dependiendo de cómo app.py empaquete la respuesta, extraemos el payload
+      const payload = data.resultado || data;
+
+      if (payload.error) {
+        // Si el algoritmo detectó un fallo (modelo vacío, respuestas cortas, etc.)
+        addError(payload.explicacion);
+
+        // Desplegamos un botón de rescate para reiniciar el test
+        const row = document.createElement('div');
+        row.style.textAlign = 'center';
+        row.style.marginTop = '15px';
+        row.innerHTML = `<button onclick="window.location.reload()" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Reintentar Test</button>`;
+        messagesContainer.appendChild(row);
+        scrollToBottom();
+
+      } else if (data.success || payload.carrera_recomendada) {
+        // Si no hay error, mostramos el banner normal para ir a la página de resultados
         showCompletionBanner();
       } else {
-        addError('No se pudo obtener el resultado. ' + (data.error || ''));
+        addError('No se pudo procesar el análisis. ' + (data.error || ''));
       }
     } catch (err) {
       removeTyping(typingId);
-      addError('Error al obtener resultados.');
+      addError('Error de comunicación con el servidor al obtener resultados.');
       console.error(err);
     }
   }
@@ -225,10 +241,10 @@ async function startSession() {
   }
 
   function addTyping() {
-    const id  = 'typing-' + Date.now();
+    const id = 'typing-' + Date.now();
     const row = document.createElement('div');
     row.className = 'message-row bot';
-    row.id        = id;
+    row.id = id;
 
     const avatar = document.createElement('div');
     avatar.className = 'msg-avatar ai-av';
@@ -252,7 +268,7 @@ async function startSession() {
 
   function updateProgress(current) {
     const pct = (current / totalPreguntas) * 100;
-    if (progressBar)     progressBar.style.width = pct + '%';
+    if (progressBar) progressBar.style.width = pct + '%';
     if (progressCurrent) progressCurrent.textContent = current;
 
     // Update question dots
@@ -260,14 +276,14 @@ async function startSession() {
       const dot = document.getElementById(`q-dot-${i}`);
       if (!dot) continue;
       dot.classList.remove('done', 'active');
-      if (i < current)      dot.classList.add('done');
+      if (i < current) dot.classList.add('done');
       else if (i === current) dot.classList.add('active');
     }
 
     // Update step items
     document.querySelectorAll('.step-item').forEach((el, idx) => {
       el.classList.remove('done', 'active');
-      if (idx < current)      el.classList.add('done');
+      if (idx < current) el.classList.add('done');
       else if (idx === current) el.classList.add('active');
     });
   }
@@ -281,7 +297,7 @@ async function startSession() {
   function disableInput(disabled, hide = false) {
     if (!chatInput || !sendBtn) return;
     chatInput.disabled = disabled;
-    sendBtn.disabled   = disabled;
+    sendBtn.disabled = disabled;
     if (hide) chatInput.placeholder = 'Entrevista finalizada.';
   }
 
@@ -295,7 +311,7 @@ async function startSession() {
     if (!chatInput || !wordCountEl) return;
     const words = chatInput.value.trim() ? chatInput.value.trim().split(/\s+/).length : 0;
     wordCountEl.textContent = words;
-    wordCountEl.className   = 'wc-number ' + (words >= 10 ? 'ok' : 'warn');
+    wordCountEl.className = 'wc-number ' + (words >= 10 ? 'ok' : 'warn');
   }
 
   // ── Minimal markdown → HTML ────────────────────────────────────

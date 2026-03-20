@@ -268,3 +268,47 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── Alerta de Errores (Fallback) ───────────────────────────── */
+.alerta-error {
+  background-color: rgba(224, 60, 60, 0.05);
+  border: 1px solid rgba(224, 60, 60, 0.3);
+  padding: 30px 20px;
+  border-radius: var(--radius-xl);
+  text-align: center;
+  color: var(--color-error);
+  margin: 20px auto;
+  max-width: 500px;
+}
+
+.alerta-error h3 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--color-error);
+}
+
+.alerta-error p {
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.alerta-error button {
+  background: linear-gradient(90deg, var(--color-error), #c53030);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.alerta-error button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(224, 60, 60, 0.3);
+}

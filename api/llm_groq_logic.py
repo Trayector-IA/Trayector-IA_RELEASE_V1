@@ -9,19 +9,15 @@ from groq import Groq
 from dotenv import load_dotenv, find_dotenv
 
 # ── Inicializar cliente Groq ──────────────────────────────────────────────────
-# find_dotenv() buscará el .env en la raíz automáticamente
 load_dotenv(find_dotenv())
 
 api_key = os.environ.get("GROQ_API_KEY")
 
-# Un pequeño print de depuración para tu consola
 print("Llave de Groq detectada:", "SÍ" if api_key else "NO") 
 
 cliente_groq = Groq(api_key=api_key)
-# ── 10 Preguntas vocacionales ─────────────────────────────────────────────────
-# Bloque 1 (preguntas 1-5): orientadas al PERFIL DE INGRESO (situación actual)
-# Bloque 2 (preguntas 6-10): orientadas al PERFIL DE EGRESO (proyección futura)
 
+# ── 10 Preguntas vocacionales ─────────────────────────────────────────────────
 PREGUNTAS = [
     # ── PERFIL DE INGRESO ──────────────────────────────────────────────────────
     "¿Qué actividades o temas disfrutas más cuando estudias o realizas proyectos "
@@ -54,10 +50,9 @@ PREGUNTAS = [
     "¿Qué tipo de impacto te gustaría generar con tu trabajo o profesión?",
 ]
 
-# Bloques para mostrar separación visual en el chat
 BLOQUES = {
-    0: "📚 Bloque 1 — Perfil de ingreso (tu situación actual)",
-    5: "🔭 Bloque 2 — Proyección profesional (tu futuro)",
+    0: "Bloque 1 — Perfil de ingreso (tu situación actual)",
+    5: "Bloque 2 — Proyección profesional (tu futuro)",
 }
 
 # ── Saludo inicial ────────────────────────────────────────────────────────────
@@ -75,30 +70,30 @@ def obtener_saludo_inicial() -> str:
         "Pídele que responda con detalle y honestidad, ya que la calidad del análisis "
         "depende de la profundidad de sus respuestas.\n\n"
         f"Finalmente, formula esta primera pregunta:\n\"{PREGUNTAS[0]}\"\n\n"
-            
     )
 
-    resp = cliente_groq.chat.completions.create(
-        messages=[{"role": "system", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.7,
-        max_tokens=350,
-    )
-    return resp.choices[0].message.content
-
+    try:
+        resp = cliente_groq.chat.completions.create(
+            messages=[{"role": "system", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+            max_tokens=350,
+        )
+        return resp.choices[0].message.content
+    except Exception as e:
+        print(f"Error en Groq (saludo): {e}")
+        return f"¡Hola! Soy Trayector-IA, tu orientador vocacional. El asistente de IA conversacional está tomando un breve descanso, pero el sistema de análisis principal está activo. Vamos a comenzar: {PREGUNTAS[0]}"
 
 # ── Evaluación de respuesta ───────────────────────────────────────────────────
 
 def evaluar_respuesta_usuario(respuesta_usuario: str, indice_actual: int) -> dict:
     """
     Evalúa si la respuesta es útil y formula la siguiente pregunta.
-    Retorna dict: { "es_valida": bool, "mensaje": str }
     """
     pregunta_actual = PREGUNTAS[indice_actual]
     es_ultima = (indice_actual + 1 >= len(PREGUNTAS))
     siguiente_pregunta = "" if es_ultima else PREGUNTAS[indice_actual + 1]
 
-    # Verificar si la siguiente pregunta inicia un nuevo bloque
     aviso_bloque = ""
     if not es_ultima and (indice_actual + 1) in BLOQUES:
         aviso_bloque = (
@@ -137,44 +132,40 @@ def evaluar_respuesta_usuario(respuesta_usuario: str, indice_actual: int) -> dic
         "- \"mensaje\": string (tu respuesta conversacional al estudiante)"
     )
 
-    resp = cliente_groq.chat.completions.create(
-        messages=[{"role": "system", "content": prompt_sistema}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.5,
-        response_format={"type": "json_object"},
-    )
-    raw = resp.choices[0].message.content
-
-    # Parsing defensivo
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        import re
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        data = json.loads(match.group()) if match else {}
+        resp = cliente_groq.chat.completions.create(
+            messages=[{"role": "system", "content": prompt_sistema}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.5,
+            response_format={"type": "json_object"},
+        )
+        raw = resp.choices[0].message.content
 
-    # Normalizar claves: el LLM a veces responde en inglés ("message", "valid")
-    # o con mayúsculas. Convertir todas las claves a minúsculas primero.
-    data_norm = {k.lower(): v for k, v in data.items()}
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            import re
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            data = json.loads(match.group()) if match else {}
 
-    es_valida = (data_norm.get('es_valida')
-                 or data_norm.get('esvalida')
-                 or data_norm.get('valid')
-                 or data_norm.get('is_valid'))
-    if isinstance(es_valida, str):
-        es_valida = es_valida.lower() == 'true'
+        data_norm = {k.lower(): v for k, v in data.items()}
+        es_valida = (data_norm.get('es_valida') or data_norm.get('esvalida') or data_norm.get('valid') or data_norm.get('is_valid'))
+        
+        if isinstance(es_valida, str):
+            es_valida = es_valida.lower() == 'true'
 
-    mensaje = (data_norm.get('mensaje')
-               or data_norm.get('message')
-               or data_norm.get('respuesta')
-               or data_norm.get('response'))
+        mensaje = (data_norm.get('mensaje') or data_norm.get('message') or data_norm.get('respuesta') or data_norm.get('response'))
 
-    # Fallback de último recurso si el LLM no devolvió ningún mensaje
-    if not mensaje:
-        siguiente = PREGUNTAS[indice_actual + 1] if indice_actual + 1 < len(PREGUNTAS) else None
-        mensaje = f"¡Gracias!\n\n**{siguiente}**" if siguiente else "¡Completaste todas las preguntas!"
+        if not mensaje:
+            mensaje = f"Entendido.\n\n{siguiente_pregunta}" if siguiente_pregunta else "¡Completaste todas las preguntas!"
 
-    return {"es_valida": bool(es_valida), "mensaje": mensaje}
+        return {"es_valida": bool(es_valida), "mensaje": mensaje}
+
+    except Exception as e:
+        print(f"Error en Groq (evaluación): {e}")
+        # Salvavidas en caso de que Groq falle a mitad del test
+        mensaje_rescate = f"Entendido, he guardado tu respuesta.\n\n{siguiente_pregunta}" if siguiente_pregunta else "¡Excelente! He procesado todas tus respuestas."
+        return {"es_valida": True, "mensaje": mensaje_rescate}
 
 
 # ── Explicación de afinidad ───────────────────────────────────────────────────
@@ -203,10 +194,15 @@ def generar_explicacion_afinidad(
         "Mantén un tono alentador, profesional y motivador."
     )
 
-    resp = cliente_groq.chat.completions.create(
-        messages=[{"role": "system", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.6,
-        max_tokens=320,
-    )
-    return resp.choices[0].message.content
+    try:
+        resp = cliente_groq.chat.completions.create(
+            messages=[{"role": "system", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.6,
+            max_tokens=320,
+        )
+        return resp.choices[0].message.content
+    except Exception as e:
+        print(f"Error en Groq (explicación): {e}")
+        # Salvavidas si la IA falla al generar el resultado final
+        return f"Tus respuestas indican un perfil compatible con {carrera_detectada}. (Nota: La IA conversacional para detalles avanzados está temporalmente inactiva, pero el cálculo matemático es exacto)."

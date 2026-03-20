@@ -117,34 +117,54 @@ class OrientadorAPI:
         return {"es_valida": True, "mensaje": "¡Completaste las 10 preguntas! Procesando tu perfil con IA..."}
 
     def obtener_resultado(self, respuestas):
-        if self.nlp_ok:
-            try:
-                resultados = analizar_afinidad(respuestas, self.vectorizador, self.modelo_knn, self.clases)
-                if resultados:
-                    mejor = resultados[0]
-                    carrera, pct = mejor["Carrera"], mejor["Similitud"]
-                    info = self.info_carrera(carrera)
-                    if self.llm_ok:
-                        try: explicacion = generar_explicacion_afinidad(respuestas, carrera, pct)
-                        except: explicacion = self._explicacion_fallback(carrera, pct)
-                    else:
-                        explicacion = self._explicacion_fallback(carrera, pct)
-                    return {
-                        "carrera_recomendada": carrera,
-                        "porcentaje": pct,
-                        "explicacion": explicacion,
-                        "nivel": self._nivel_afinidad(pct),
-                        "otras_opciones": resultados[1:6],
-                        "total_respuestas": len(respuestas),
-                        "facultad":    info.get("Facultad / entidad académica (región Orizaba-Córdoba)", ""),
-                        "municipio":   info.get("Municipio(s) donde se ofrece en la región", ""),
-                        "modalidad":   info.get("Modalidad(es) en la región", ""),
-                        "perfil_ingreso": info.get("Perfil de ingreso (síntesis)", ""),
-                        "perfil_egreso":  info.get("Perfil de egreso (síntesis)", ""),
-                    }
-            except Exception as e: print(f"[NLP] resultado fallback: {e}")
-        return self._resultado_demo(respuestas)
+            # 1. Verificación inicial: ¿El modelo cargó correctamente al iniciar el servidor?
+            if not self.nlp_ok:
+                return self._resultado_error("modelo")
 
+            try:
+                # 2. Ejecución del motor KNN
+                resultados = analizar_afinidad(respuestas, self.vectorizador, self.modelo_knn, self.clases)
+                
+                # 3. Verificación de contenido: ¿Hubo coincidencias con el perfil?
+                if not resultados:
+                    return self._resultado_error("vacio")
+
+                # Si llegamos aquí, el algoritmo encontró coincidencias
+                mejor = resultados[0]
+                carrera, pct = mejor["Carrera"], mejor["Similitud"]
+                info = self.info_carrera(carrera)
+
+                # 4. Generación de la explicación (IA vs Fallback)
+                if self.llm_ok:
+                    try: 
+                        explicacion = generar_explicacion_afinidad(respuestas, carrera, pct)
+                    except Exception as e:
+                        print(f"[LLM] Error en explicación dinámica: {e}")
+                        explicacion = self._explicacion_fallback(carrera, pct)
+                else:
+                    explicacion = self._explicacion_fallback(carrera, pct)
+
+                # 5. Retorno de éxito
+                return {
+                    "error": False,
+                    "carrera_recomendada": carrera,
+                    "porcentaje": pct,
+                    "explicacion": explicacion,
+                    "nivel": self._nivel_afinidad(pct),
+                    "otras_opciones": resultados[1:6],
+                    "total_respuestas": len(respuestas),
+                    "facultad":    info.get("Facultad / entidad académica (región Orizaba-Córdoba)", "No disponible"),
+                    "municipio":   info.get("Municipio(s) donde se ofrece en la región", "No disponible"),
+                    "modalidad":   info.get("Modalidad(es) en la región", "No disponible"),
+                    "perfil_ingreso": info.get("Perfil de ingreso (síntesis)", "Consulta el portal oficial."),
+                    "perfil_egreso":  info.get("Perfil de egreso (síntesis)", "Consulta el portal oficial."),
+                }
+
+            except Exception as e:
+                # 6. Captura de errores críticos durante el análisis
+                print(f"[CRÍTICO] Fallo en obtener_resultado: {e}")
+                return self._resultado_error("nlp")
+        
     @staticmethod
     def _nivel_afinidad(p): return "alto" if p >= 80 else ("medio" if p >= 60 else "bajo")
 
@@ -153,21 +173,21 @@ class OrientadorAPI:
         return (f"El análisis semántico mostró una afinidad del {pct}% con {carrera}. "
                 "Las habilidades e intereses que describiste se alinean con el perfil académico de esta carrera en Campus Ixtac.")
 
-    def _resultado_demo(self, respuestas):
-        demos = ["Ingeniería de Software","Administración","Gestión y Dirección de Negocios","Contaduría"]
-        h = int(hashlib.md5(" ".join(respuestas).encode()).hexdigest(), 16)
-        carrera = demos[h % len(demos)]
-        pct = round(65 + (h % 22), 2)
-        info = self.info_carrera(carrera)
+def _resultado_error(self, tipo_error="desconocido"):
+        """Devuelve un objeto de resultado que la interfaz reconoce como un fallo técnico."""
+        mensajes = {
+            "modelo": "No pudimos cargar el catálogo de carreras. Por favor, contacta al administrador.",
+            "nlp": "Hubo un problema al procesar tus respuestas. ¿Podrías intentarlo de nuevo?",
+            "vacio": "No logramos encontrar una coincidencia clara con tu perfil. Intenta ser más descriptivo en tus respuestas.",
+            "desconocido": "Algo salió mal en nuestro servidor. Estamos trabajando para solucionarlo."
+        }
+        
         return {
-            "carrera_recomendada": carrera, "porcentaje": pct,
-            "explicacion": self._explicacion_fallback(carrera, pct),
-            "nivel": self._nivel_afinidad(pct),
-            "otras_opciones": [{"Carrera": c, "Similitud": round(pct-(i*9+4),2)} for i,c in enumerate([x for x in demos if x!=carrera][:3]) if pct-(i*9+4)>0],
-            "total_respuestas": len(respuestas),
-            "facultad": info.get("Facultad / entidad académica (región Orizaba-Córdoba)",""),
-            "municipio": info.get("Municipio(s) donde se ofrece en la región",""),
-            "modalidad": info.get("Modalidad(es) en la región",""),
-            "perfil_ingreso": info.get("Perfil de ingreso (síntesis)",""),
-            "perfil_egreso": info.get("Perfil de egreso (síntesis)",""),
+            "error": True,
+            "tipo": tipo_error,
+            "carrera_recomendada": "Error de Procesamiento",
+            "explicacion": mensajes.get(tipo_error, mensajes["desconocido"]),
+            "porcentaje": 0,
+            "nivel": "n/a",
+            "otras_opciones": []
         }
