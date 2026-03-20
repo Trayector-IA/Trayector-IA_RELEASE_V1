@@ -206,7 +206,7 @@ def api_answer():
 @app.route('/api/result', methods=['POST'])
 def api_result():
     sid = session.get('sid')
-    usuario_id = session.get('usuario_id') # Recuperamos el ID de la sesión
+    usuario_id = session.get('usuario_id') 
 
     if not sid or not usuario_id:
         return jsonify({'success': False, 'error': 'Sesión no iniciada o ID inválido.'}), 400
@@ -221,33 +221,38 @@ def api_result():
         }), 400
 
     try:
-            resultado = orientador.obtener_resultado(respuestas)
-            
-            # 1. Guardar en memoria el resultado completo (para la interfaz web)
-            store['resultado'] = resultado
-            session['completado'] = True
-            session.modified = True
+        resultado = orientador.obtener_resultado(respuestas)
+        
+        # --- NUEVA BARRERA DE ERROR ---
+        # Si el orientador detectó un fallo lógico (KNN vacío, modelo caído, etc.)
+        if resultado.get("error"):
+            # Devolvemos success=False para que el JS active la alerta roja
+            return jsonify({'success': False, 'error': resultado.get("explicacion", "Error en el análisis.")})
+        # ------------------------------
 
-            # 2. Filtrar lo que se va a MongoDB usando las llaves correctas de tu orientador.py
-            carrera_top = resultado.get("carrera_recomendada")
-            porcentaje_top = resultado.get("porcentaje")
-            otras_opciones = resultado.get("otras_opciones", [])
-            
-            # Armamos una estructura limpia solo con los datos duros
-            datos_para_mongo = {
-                "carrera_principal": carrera_top,
-                "similitud_principal": porcentaje_top,
-                "otras_carreras": otras_opciones
-            }
+        # Si no hay error, el flujo sigue normal
+        store['resultado'] = resultado
+        session['completado'] = True
+        session.modified = True
 
-            # 3. Guardar la versión ligera en MongoDB
-            db_client.guardar_resultado(usuario_id, datos_para_mongo)
+        carrera_top = resultado.get("carrera_recomendada")
+        porcentaje_top = resultado.get("porcentaje")
+        otras_opciones = resultado.get("otras_opciones", [])
+        
+        datos_para_mongo = {
+            "carrera_principal": carrera_top,
+            "similitud_principal": porcentaje_top,
+            "otras_carreras": otras_opciones
+        }
 
-            return jsonify({'success': True, 'resultado': resultado})
+        # Solo guardamos en DB si fue un éxito real
+        db_client.guardar_resultado(usuario_id, datos_para_mongo)
+
+        return jsonify({'success': True, 'resultado': resultado})
             
     except Exception as e:
-            app.logger.error(f'[/api/result] Error: {e}')
-            return jsonify({'success': False, 'error': str(e)}), 500
+        app.logger.error(f'[/api/result] Error: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 500
     
 @app.route('/login')
 def login_page():
