@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Orientador Vocacional — Trayector-IA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orientador.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+<div id="modal-acceso" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Bienvenido a Trayector-IA</h2>
+        <p>Ingresa tu código de acceso para comenzar.</p>
+        
+        <input type="text" id="input-codigo" placeholder="Tu código (Ej. MAT-2024)">
+        <input type="password" id="input-password" placeholder="Contraseña admin" style="display: none;">
+        
+        <button id="btn-ingresar" onclick="validarAcceso()">Ingresar</but0ton>
+        
+        <p onclick="document.getElementById('input-password').style.display='block'" 
+           style="font-size: 10px; color: transparent; cursor: default; user-select: none; margin-top: 15px;">
+           .
+        </p>
+    </div>
+</div>
+
+<div class="orientador-layout" id="interfaz-orientador">
+
+  <aside class="chat-sidebar" aria-label="Panel de progreso">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🤖</div>
+      <div>
+        <h2>Orientador IA</h2>
+        <p>Entrevista vocacional · 10 preguntas</p>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <h4>Progreso general</h4>
+      <div class="progress-numbers">
+        <span class="progress-current" id="progress-current">0</span>
+        <span class="progress-total">/ 10 preguntas</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="question-dots" style="margin-top:10px;grid-template-columns:repeat(10,1fr);">
+        {% for i in range(10) %}
+        <div class="q-dot {% if i==0 %}active{% endif %}" id="q-dot-{{ i }}"></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="sidebar-block">
+      <div class="block-label" id="block-label-0">📚 Bloque 1 — Perfil actual</div>
+      <div class="steps-list">
+        {% set preguntas_cortas = [
+          "Actividades y temas favoritos",
+          "Rol en equipos de trabajo",
+          "Problema que quieres resolver",
+          "Habilidades que te describen",
+          "Tres áreas de interés",
+        ] %}
+        {% for i in range(5) %}
+        <div class="step-item {% if i==0 %}active{% endif %}" id="step-{{ i }}">
+          <div class="step-badge">{{ i+1 }}</div>
+          <span>{{ preguntas_cortas[i] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="sidebar-block">
+      <div class="block-label" id="block-label-5">🔭 Bloque 2 — Proyección futura</div>
+      <div class="steps-list">
+        {% set preguntas_cortas_2 = [
+          "Trabajo ideal a 10 años",
+          "Problemas a resolver en sociedad",
+          "Tipo de organizaciones",
+          "Mejora en comunidad o mundo",
+          "Impacto de tu profesión",
+        ] %}
+        {% for i in range(5) %}
+        <div class="step-item" id="step-{{ i+5 }}">
+          <div class="step-badge">{{ i+6 }}</div>
+          <span>{{ preguntas_cortas_2[i] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="sidebar-tip">
+      <div class="tip-label">💡 Consejo</div>
+      <p>Responde con al menos 10 palabras. El sistema analiza el significado de tus palabras para encontrar la mejor coincidencia entre 25 carreras.</p>
+    </div>
+
+    <button id="reset-btn" class="btn btn-ghost" style="width:100%;font-size:0.8rem;padding:10px;">
+      ↺ Reiniciar entrevista
+    </button>
+  </aside>
+
+  <div class="chat-area">
+    <div class="chat-topbar">
+      <div class="chat-topbar-left">
+        <div class="ai-status-dot"></div>
+        <div>
+          <h3>Trayector-IA</h3>
+          <p>Orientador vocacional · Universidad Veracruzana</p>
+        </div>
+      </div>
+      <a href="/" class="btn btn-ghost" style="padding:8px 14px;font-size:0.8rem;">← Inicio</a>
+    </div>
+
+    <div class="messages-container" id="messages-container" aria-live="polite" role="log"></div>
+
+    <div class="completion-banner" id="completion-banner">
+      <span>🎯 ¡Entrevista completada! Tu resultado está listo.</span>
+      <button id="view-results-btn" class="btn btn-primary" style="padding:10px 20px;">Ver mi resultado →</button>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="word-count-bar">
+        <span>Palabras: <span class="wc-number warn" id="word-count">0</span> / mín. 10</span>
+        <span style="font-size:0.68rem;opacity:0.6;">Enter para enviar · Shift+Enter para nueva línea</span>
+      </div>
+      <div class="input-row">
+        <textarea id="chat-input" placeholder="Escribe tu respuesta aquí (mínimo 10 palabras)..." rows="1" aria-label="Tu respuesta" disabled></textarea>
+        <button id="send-btn" aria-label="Enviar respuesta" disabled title="Enviar">➤</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.TOTAL_PREGUNTAS = 10;
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}?v=1.1"></script>
+{% endblock %}

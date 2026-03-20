@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Trayector-IA — Orientación Vocacional con IA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+  </div>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-eyebrow anim-fade-up" data-delay="1">
+          <span class="badge">🧠 NLP · TF-IDF · KNN · LLM</span>
+        </div>
+        <h1 class="hero-title anim-fade-up" data-delay="2">
+          Descubre tu<br><span class="highlight">carrera ideal</span><br>con IA
+        </h1>
+        <p class="hero-desc anim-fade-up" data-delay="3">
+          Trayector-IA analiza tus respuestas con Procesamiento de Lenguaje Natural para identificar la carrera que mejor se adapta a tu perfil, habilidades e intereses dentro de la oferta académica de la Universidad Veracruzana.
+        </p>
+        <div class="hero-actions anim-fade-up" data-delay="4">
+          <a href="/orientador" class="btn btn-primary">🚀 Probar orientador vocacional</a>
+          <a href="#como-funciona" class="btn btn-ghost">¿Cómo funciona?</a>
+        </div>
+      </div>
+      <div class="hero-visual anim-fade-up" data-delay="3">
+        <div class="ai-card-visual">
+          <div class="ai-card-header">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-card-header-info">
+              <strong>Trayector-IA</strong>
+              <span>● Activo — Analizando perfil</span>
+            </div>
+          </div>
+          <div class="ai-messages">
+            <div class="ai-msg bot">¡Hola! Voy a hacerte 10 preguntas para encontrar tu carrera ideal.</div>
+            <div class="ai-msg user">Me apasiona resolver problemas tecnológicos y crear software.</div>
+            <div class="ai-msg bot">¿Qué rol sueles tomar en proyectos de equipo?</div>
+            <div class="ai-msg user">Lidero la parte técnica y arquitectura del sistema.</div>
+          </div>
+          <div class="ai-card-result">
+            <div class="result-label">Resultado del análisis</div>
+            <div class="result-career">Ingeniería de Software</div>
+            <div class="result-pct">✓ Afinidad: 87.4%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-strip anim-fade-up" data-delay="5">
+      <div class="stat-item"><div class="stat-number">25</div><div class="stat-label">Carreras analizadas</div></div>
+      <div class="stat-item"><div class="stat-number">10</div><div class="stat-label">Preguntas de entrevista</div></div>
+      <div class="stat-item"><div class="stat-number">NLP</div><div class="stat-label">Motor de análisis</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CÓMO FUNCIONA ═══ -->
+<section id="como-funciona" class="section">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:48px;">
+      <span class="label-mono">¿Cómo funciona?</span>
+      <h2 class="section-title" style="margin-top:8px;">Proceso en 4 pasos</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card anim-fade-up" data-delay="1">
+        <div class="step-num">01</div>
+        <h3>Inicias la entrevista</h3>
+        <p>El sistema te da la bienvenida y comienza con 10 preguntas divididas en dos bloques: perfil de ingreso y proyección futura.</p>
+      </div>
+      <div class="step-card anim-fade-up" data-delay="2">
+        <div class="step-num">02</div>
+        <h3>Respondes libremente</h3>
+        <p>Escribe con detalle. La IA analiza el significado semántico de lo que escribes para capturar tus intereses reales.</p>
+      </div>
+      <div class="step-card anim-fade-up" data-delay="3">
+        <div class="step-num">03</div>
+        <h3>NLP procesa tu perfil</h3>
+        <p>NLTK realiza stemming, TF-IDF vectoriza tus respuestas y KNN calcula la distancia coseno con cada carrera del catálogo.</p>
+      </div>
+      <div class="step-card anim-fade-up" data-delay="4">
+        <div class="step-num">04</div>
+        <h3>Obtienes tu resultado</h3>
+        <p>Recibes una recomendación personalizada con porcentaje de afinidad, explicación detallada e información de la carrera.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BLOQUES DE PREGUNTAS ═══ -->
+<section class="section section--sm" style="background:var(--color-bg-card);">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:40px;">
+      <span class="label-mono">Estructura de la entrevista</span>
+      <h2 class="section-title" style="margin-top:8px;">10 preguntas · 2 bloques</h2>
+    </div>
+    <div class="grid-2" style="max-width:800px;margin:0 auto;">
+      <div class="card">
+        <div style="font-size:1.6rem;margin-bottom:12px;">📚</div>
+        <div class="label-mono" style="margin-bottom:8px;">Bloque 1 · Preguntas 1–5</div>
+        <h3 style="font-size:1rem;margin-bottom:10px;">Perfil de ingreso</h3>
+        <p style="font-size:0.85rem;color:var(--color-text-muted);line-height:1.65;">Exploran tu situación actual: actividades que disfrutas, rol en equipos, problemas que te motivan, habilidades que te describen y áreas de interés.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:1.6rem;margin-bottom:12px;">🔭</div>
+        <div class="label-mono" style="margin-bottom:8px;">Bloque 2 · Preguntas 6–10</div>
+        <h3 style="font-size:1rem;margin-bottom:10px;">Proyección profesional</h3>
+        <p style="font-size:0.85rem;color:var(--color-text-muted);line-height:1.65;">Exploran tu visión futura: trabajo ideal a 10 años, problemas a resolver, organizaciones donde trabajarías, impacto deseado y legado profesional.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CARRERAS ═══ -->
+<section class="section">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:40px;">
+      <span class="label-mono">Oferta académica UV</span>
+      <h2 class="section-title" style="margin-top:8px;">Carreras que evalúa el sistema</h2>
+      <p style="color:var(--color-text-muted);margin-top:12px;max-width:580px;margin-left:auto;margin-right:auto;">
+        El modelo fue entrenado con los perfiles de ingreso y egreso de 25 programas educativos de la Universidad Veracruzana, Región Orizaba-Córdoba.
+      </p>
+    </div>
+    <div class="career-cards">
+      {% set carreras_list = [
+        ("📊","Administración","FCA / FNyT, Campus Ixtac"),
+        ("🌱","Agroecología y Soberanía Alimentaria","Otras regiones UV"),
+        ("🏛️","Arquitectura","Facultad de Arquitectura, Córdoba"),
+        ("🔬","Biología","FCBA, campus Peñuela"),
+        ("🦷","Cirujano Dentista","Facultad de Odontología"),
+        ("🧾","Contaduría","FCA / FNyT, Campus Ixtac"),
+        ("⚖️","Derecho","DGSEA, región Orizaba-Córdoba"),
+        ("🏃","Educación Física, Deporte y Recreación","Extensión Orizaba"),
+        ("🏥","Enfermería","Campus Orizaba y Córdoba"),
+        ("🎨","Enseñanza de las Artes","Espacios culturales UV"),
+        ("🤝","Gestión Intercultural para el Desarrollo","UVI Grandes Montañas"),
+        ("💼","Gestión y Dirección de Negocios","FNyT, Campus Ixtac"),
+        ("🌿","Ingeniería Ambiental","FCQ Orizaba-Córdoba"),
+        ("🏗️","Ingeniería Civil","FIME, Ciudad Mendoza"),
+        ("💻","Ingeniería de Software","FNyT, Campus Ixtac"),
+        ("🌾","Ingeniería en Agronomía","FCBA, campus Peñuela"),
+        ("🍎","Ingeniería en Alimentos","FCQ Orizaba-Córdoba"),
+        ("🧬","Ingeniería en Biotecnología","FCQ Orizaba-Córdoba"),
+        ("⚙️","Ingeniería Industrial","FIME, Ciudad Mendoza"),
+        ("⚡","Ingeniería Mecánica Eléctrica","FIME, Ciudad Mendoza"),
+        ("🤖","Ingeniería Mecatrónica","FIME, Ciudad Mendoza"),
+        ("⚗️","Ingeniería Química","FCQ Orizaba-Córdoba"),
+        ("🩺","Médico Cirujano","Facultad de Medicina, Cd. Mendoza"),
+        ("🏭","Química Industrial","FCQ Orizaba-Córdoba"),
+        ("💊","Químico Farmacéutico Biólogo","FCQ Orizaba-Córdoba"),
+        ("📖","Sociología","SEA región Orizaba-Córdoba"),
+      ] %}
+      {% for icon, nombre, sede in carreras_list %}
+      <div class="career-card anim-fade-up" data-delay="{{ loop.index % 6 + 1 }}">
+        <div class="career-icon">{{ icon }}</div>
+        <h3>{{ nombre }}</h3>
+        <p style="font-size:0.72rem;color:var(--color-text-muted);margin-top:6px;line-height:1.4;">{{ sede }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ═══ INSTITUCIÓN ═══ -->
+<section class="section">
+  <div class="container">
+    <div class="institution-section">
+      <div>
+        <span class="label-mono">Contexto académico</span>
+        <h2 class="section-title" style="margin-top:8px;margin-bottom:16px;">Facultad de Negocios y Tecnologías</h2>
+        <p style="color:var(--color-text-muted);line-height:1.8;max-width:480px;font-size:0.95rem;">
+          Trayector-IA fue desarrollado para apoyar el proceso de orientación vocacional de estudiantes de la <strong>Universidad Veracruzana, Campus Ixtaczoquitlán</strong>. El sistema es una herramienta complementaria al asesoramiento académico presencial y cubre toda la oferta educativa de la región Orizaba-Córdoba.
+        </p>
+        <a href="/orientador" class="btn btn-primary" style="margin-top:24px;">Comenzar evaluación →</a>
+      </div>
+      <div class="institution-meta">
+        <div class="institution-tag">🎓 Universidad Veracruzana</div>
+        <div class="institution-tag">🏫 Campus Ixtaczoquitlán</div>
+        <div class="institution-tag">💼 Fac. de Negocios y Tecnologías</div>
+        <div class="institution-tag">📍 Región Orizaba-Córdoba</div>
+        <div class="institution-tag">🤖 NLP + TF-IDF + KNN</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TECNOLOGÍAS ═══ -->
+<section class="section section--sm" style="background:var(--color-bg-card);">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:36px;">
+      <span class="label-mono">Stack tecnológico</span>
+      <h2 class="section-title" style="margin-top:8px;">Tecnologías utilizadas</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card"><div class="tech-icon">🐍</div><span>Python</span></div>
+      <div class="tech-card"><div class="tech-icon">🤖</div><span>Machine Learning</span></div>
+      <div class="tech-card"><div class="tech-icon">🔤</div><span>NLTK / NLP</span></div>
+      <div class="tech-card"><div class="tech-icon">🌐</div><span>Flask API</span></div>
+      <div class="tech-card"><div class="tech-icon">📐</div><span>HTML5</span></div>
+      <div class="tech-card"><div class="tech-icon">🎨</div><span>CSS3</span></div>
+      <div class="tech-card"><div class="tech-icon">⚡</div><span>JavaScript</span></div>
+      <div class="tech-card"><div class="tech-icon">📊</div><span>TF-IDF / KNN</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA FINAL ═══ -->
+<section class="section">
+  <div class="container" style="text-align:center;">
+    <span class="label-mono">¿Listo para empezar?</span>
+    <h2 class="section-title" style="margin-top:8px;margin-bottom:16px;">Descubre tu vocación en minutos</h2>
+    <p style="color:var(--color-text-muted);max-width:440px;margin:0 auto 28px;font-size:0.95rem;">
+      La entrevista consta de <strong>10 preguntas abiertas</strong> en dos bloques. Solo necesitas ser honesto y detallado en tus respuestas.
+    </p>
+    <a href="/orientador" class="btn btn-primary" style="font-size:1rem;padding:16px 36px;">
+      🚀 Iniciar orientación vocacional
+    </a>
+  </div>
+</section>
+
+{% endblock %}

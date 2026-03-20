@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Panel de Administracion - Trayector-IA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h2>Panel de Control</h2>
+        <p>Sesion iniciada como Administrador</p>
+    </div>
+
+    <h3>Resultados de Entrevistas</h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID Usuario</th>
+                    <th>Carrera Principal</th>
+                    <th>Similitud</th>
+                    <th>Otras Opciones</th>
+                </tr>
+            </thead>
+<tbody>
+                {% for res in resultados %}
+                <tr>
+                    <td>{{ res.usuario_id }}</td>
+                    
+                    {% if res.resultado %}
+                        <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                        <td>{{ res.resultado.similitud_principal }}%</td>
+                        <td>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
+                            {% for opcion in res.resultado.otras_carreras %}
+                                <li>{{ opcion.Carrera }} ({{ opcion.Similitud }}%)</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                    {% elif res.top_carreras %}
+                        <td><strong>{{ res.top_carreras[0] }}</strong></td>
+                        <td>N/A</td>
+                        <td>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
+                            {% for opcion in res.top_carreras[1:] %}
+                                <li>{{ opcion }}</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                    {% else %}
+                        <td colspan="3" style="color: #ef4444; opacity: 0.8;">Datos incompletos</td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No hay resultados registrados todavia.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+    </div>
+
+    <h3>Usuarios Registrados</h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID Usuario</th>
+                    <th>Rol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usr in usuarios %}
+                <tr>
+                    <td>{{ usr.usuario_id }}</td>
+                    <td>
+                        <span class="badge {% if usr.rol == 'admin' %}admin{% endif %}">
+                            {{ usr.rol | upper }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" style="text-align: center;">No hay usuarios en la base de datos.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

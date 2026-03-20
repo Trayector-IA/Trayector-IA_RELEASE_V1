@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Iniciar Sesión — Trayector-IA{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 100px auto; padding: 40px 30px; background: var(--bg-card, rgba(255,255,255,0.05)); border-radius: 12px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); text-align: center;">
+    
+    <h2 style="margin-bottom: 10px;">Acceso al Sistema</h2>
+    <p style="margin-bottom: 30px; font-size: 0.9rem; opacity: 0.8;">Ingresa tus credenciales para continuar.</p>
+    
+    <input type="text" id="login-usuario" placeholder="ID de Usuario" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
+    
+    <input type="password" id="login-password" placeholder="Contraseña (solo admin)" style="width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
+    
+    <button onclick="procesarLogin()" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: bold;">Ingresar</button>
+    
+    <p id="login-error" style="color: #ef4444; margin-top: 15px; display: none; font-size: 0.9rem;"></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function procesarLogin() {
+    const usuarioId = document.getElementById('login-usuario').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    const errorEl = document.getElementById('login-error');
+
+    if (!usuarioId) {
+        errorEl.textContent = "Por favor, ingresa tu ID.";
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario_id: usuarioId, password: password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // El enrutador inteligente: decide a dónde enviarte según tu nivel de acceso
+            if (data.rol === 'admin') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/orientador';
+            }
+        } else {
+            errorEl.textContent = data.error || "Acceso denegado.";
+            errorEl.style.display = 'block';
+        }
+    } catch (error) {
+        errorEl.textContent = "Error de conexión con el servidor.";
+        errorEl.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

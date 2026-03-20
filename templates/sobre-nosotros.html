@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Sobre Nosotros — Trayector-IA{% endblock %}
+{% block description %}Conoce el proyecto Trayector-IA, su misión y el contexto académico del sistema de orientación vocacional.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sobre.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+  <!-- ══════════ HERO ══════════ -->
+  <div class="sobre-hero">
+    <span class="label-mono" style="margin-bottom: 12px; display: block;">El proyecto</span>
+    <h1>Sobre Trayector-IA</h1>
+    <p>Un sistema inteligente diseñado para guiar a estudiantes hacia su vocación profesional mediante Inteligencia Artificial y análisis semántico.</p>
+  </div>
+
+  <!-- ══════════ MISSION ══════════ -->
+  <div class="mission-grid">
+
+    <div class="mission-card">
+      <div class="mission-icon">🎯</div>
+      <h3>Nuestra Misión</h3>
+      <p>Proporcionar a los estudiantes de la Facultad de Negocios y Tecnologías una herramienta objetiva y basada en evidencia para identificar la carrera universitaria que mejor se alinea con sus intereses, habilidades y valores personales.</p>
+    </div>
+
+    <div class="mission-card">
+      <div class="mission-icon">💡</div>
+      <h3>Propósito del sistema</h3>
+      <p>Trayector-IA nació de la necesidad de complementar el asesoramiento vocacional presencial con una herramienta tecnológica accesible que use Inteligencia Artificial para ofrecer recomendaciones personalizadas en tiempo real.</p>
+    </div>
+
+    <div class="mission-card">
+      <div class="mission-icon">🏛️</div>
+      <h3>Contexto académico</h3>
+      <p>Desarrollado como proyecto académico en la <strong>Universidad Veracruzana, Campus Ixtac</strong>. El sistema aplica técnicas de Procesamiento de Lenguaje Natural (NLP) y aprendizaje automático para el análisis de perfiles vocacionales.</p>
+    </div>
+
+    <div class="mission-card">
+      <div class="mission-icon">🤝</div>
+      <h3>Para los estudiantes</h3>
+      <p>Diseñado pensando en estudiantes de bachillerato y primeros semestres que necesitan orientación clara, rápida y fundamentada para tomar una de las decisiones más importantes de su vida académica.</p>
+    </div>
+
+  </div><!-- /mission-grid -->
+
+  <!-- ══════════ CONTEXT ══════════ -->
+  <div class="context-section">
+    <span class="label-mono" style="margin-bottom: 8px; display: block;">Contexto técnico</span>
+    <h2>¿Cómo funciona el sistema?</h2>
+
+    <p>Trayector-IA combina un modelo de lenguaje grande (LLM vía Groq) para la interacción conversacional con el estudiante, y un pipeline de NLP local para el análisis semántico de las respuestas.</p>
+
+    <p>Las respuestas del estudiante son procesadas mediante tokenización, eliminación de stopwords y stemming con NLTK en español. Posteriormente, se vectorizan con TF-IDF y se comparan contra los perfiles de ingreso/egreso de cada carrera usando el algoritmo K-Nearest Neighbors con métrica de coseno.</p>
+
+    <div class="pipeline-steps">
+      <div class="pipe-step">
+        <div class="pipe-icon">💬</div>
+        <div class="pipe-content">
+          <h4>1. Entrevista conversacional</h4>
+          <p>El LLM (Llama 3.3 via Groq) formula preguntas, valida las respuestas y mantiene una conversación fluida con el estudiante.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-icon">🔤</div>
+        <div class="pipe-content">
+          <h4>2. Preprocesamiento NLP</h4>
+          <p>NLTK aplica tokenización, eliminación de stopwords en español y stemming (SnowballStemmer) a las respuestas del estudiante.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-icon">📐</div>
+        <div class="pipe-content">
+          <h4>3. Vectorización TF-IDF</h4>
+          <p>Las respuestas procesadas se convierten en vectores numéricos que representan la relevancia de cada término en el perfil del estudiante.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-icon">🔍</div>
+        <div class="pipe-content">
+          <h4>4. Clasificación KNN</h4>
+          <p>El algoritmo KNN (k=3, distancia coseno, ponderado por distancia) compara el perfil del estudiante con los perfiles académicos para calcular la afinidad por carrera.</p>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-icon">✨</div>
+        <div class="pipe-content">
+          <h4>5. Explicación personalizada</h4>
+          <p>El LLM genera una explicación humana y contextualizada que justifica la recomendación con base en las respuestas del estudiante.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="context-tags">
+      <span class="ctx-tag">Python 3</span>
+      <span class="ctx-tag">Flask</span>
+      <span class="ctx-tag">NLTK</span>
+      <span class="ctx-tag">scikit-learn</span>
+      <span class="ctx-tag">TF-IDF</span>
+      <span class="ctx-tag">KNN</span>
+      <span class="ctx-tag">Groq API</span>
+      <span class="ctx-tag">Llama 3.3</span>
+      <span class="ctx-tag">SnowballStemmer</span>
+    </div>
+  </div><!-- /context-section -->
+
+  <!-- ══════════ CARRERAS ══════════ -->
+  <section style="margin-bottom: 80px;">
+    <div style="text-align: center; margin-bottom: 36px;">
+      <span class="label-mono">Carreras evaluadas</span>
+      <h2 class="section-title" style="margin-top: 8px;">Campus Ixtac — UV</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+      {% set carreras = [
+        ('📊', 'Administración', 'Liderazgo organizacional y gestión empresarial.'),
+        ('🧾', 'Contabilidad', 'Análisis financiero, auditoría y gestión fiscal.'),
+        ('🏢', 'Gestión y Dirección de Negocios', 'Estrategia, innovación y emprendimiento.'),
+        ('💻', 'Ingeniería en Software', 'Desarrollo de software, sistemas y tecnología.'),
+        ('🏛️', 'Ciencias Políticas y Gestión Pública', 'Políticas públicas, gobierno y sociedad.'),
+      ] %}
+      {% for icon, nombre, desc in carreras %}
+      <div class="card">
+        <div style="font-size: 1.8rem; margin-bottom: 10px;">{{ icon }}</div>
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;">{{ nombre }}</h3>
+        <p style="font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.6;">{{ desc }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ══════════ CTA ══════════ -->
+  <section style="text-align: center; padding-bottom: 80px;">
+    <div style="background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: var(--radius-xl); padding: 56px 40px;">
+      <h2 style="font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 14px;">
+        ¿Listo para descubrir tu carrera?
+      </h2>
+      <p style="color: var(--color-text-muted); max-width: 440px; margin: 0 auto 28px; font-size: 0.95rem;">
+        La entrevista toma aproximadamente 10-15 minutos. Necesitas responder 6 preguntas con detalle.
+      </p>
+      <a href="/orientador" class="btn btn-primary" style="font-size: 1rem; padding: 16px 36px;">
+        🚀 Iniciar entrevista vocacional
+      </a>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+{% endblock %}

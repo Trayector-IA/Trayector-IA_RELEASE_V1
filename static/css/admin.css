@@ -1,0 +1,48 @@
+/* admin.css - Estilos exclusivos para el panel de control */
+
+.admin-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    background: var(--bg-card, rgba(255,255,255,0.05));
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+}
+
+.data-table th, .data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.data-table th {
+    background-color: rgba(0,0,0,0.2);
+    font-weight: bold;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    background-color: #3b82f6; /* Azul para estudiantes */
+    color: white;
+}
+
+.badge.admin { 
+    background-color: #ef4444; /* Rojo para administradores */
+}
