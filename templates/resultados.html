@@ -27,58 +27,28 @@
   </p>
 </div>
 
-<!-- Alerta de nivel de afinidad -->
-{% if resultado.nivel == 'alto' %}
-<div class="affinity-alert high"><span>🎯</span><span><strong>Alta compatibilidad:</strong> Tu perfil muestra una afinidad excelente con la carrera recomendada.</span></div>
-{% elif resultado.nivel == 'medio' %}
-<div class="affinity-alert medium"><span>⚠️</span><span><strong>Compatibilidad moderada:</strong> Tu perfil se acerca a esta carrera, considera explorar también las otras opciones.</span></div>
-{% else %}
-<div class="affinity-alert low"><span>ℹ️</span><span><strong>Afinidad baja:</strong> No se encontró una carrera con alta coincidencia. Te mostramos la opción más cercana.</span></div>
-{% endif %}
+<div class="affinity-alert high">
+  <span><strong>¡Análisis completado!</strong> Estas son las opciones académicas que mejor se alinean con tu perfil e intereses.</span>
+</div>
 
-<!-- Tarjeta principal de resultado -->
 <div class="main-result-card">
-  <div class="result-grid">
-    <div>
-      <div class="result-label-sm">Carrera recomendada</div>
-      <div class="career-name">{{ resultado.carrera_recomendada }}</div>
+  <div class="result-content">
+    <div class="result-label-sm">Carrera recomendada</div>
+    <div class="career-name">{{ resultado.carrera_recomendada }}</div>
 
-      {% if resultado.facultad %}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-        <span class="badge" style="font-size:0.7rem;">🏫 {{ resultado.facultad|truncate(60) }}</span>
-        {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;">📍 {{ resultado.municipio|truncate(40) }}</span>{% endif %}
-        {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;">📋 {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
-      </div>
-      {% endif %}
+    {% if resultado.facultad %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <span class="badge" style="font-size:0.7rem;">🏫 {{ resultado.facultad|truncate(60) }}</span>
+      {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;">📍 {{ resultado.municipio|truncate(40) }}</span>{% endif %}
+      {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;">📋 {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
+    </div>
+    {% endif %}
 
-      <div class="result-label-sm" style="margin-bottom:10px;">¿Por qué esta carrera?</div>
-      <div class="result-explanation">{{ resultado.explicacion }}</div>
-    </div>
-    <div style="display:flex;justify-content:center;">
-      <div class="circle-progress">
-        <svg width="140" height="140" viewBox="0 0 140 140">
-          <defs>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:var(--color-primary)"/>
-              <stop offset="100%" style="stop-color:var(--color-success)"/>
-            </linearGradient>
-          </defs>
-          <circle class="circle-bg" cx="70" cy="70" r="58"/>
-          <circle class="circle-fill" cx="70" cy="70" r="58"
-            stroke-dasharray="364.4"
-            stroke-dashoffset="{{ 364.4 - (364.4 * resultado.porcentaje / 100) }}"
-            id="circle-fill"/>
-        </svg>
-        <div class="circle-text">
-          <span class="pct-number">{{ resultado.porcentaje|int }}%</span>
-          <span class="pct-label">Afinidad</span>
-        </div>
-      </div>
-    </div>
+    <div class="result-label-sm" style="margin-bottom:10px;">¿Por qué esta carrera?</div>
+    <div class="result-explanation">{{ resultado.explicacion }}</div>
   </div>
 </div>
 
-<!-- Perfiles de la carrera -->
 {% if resultado.perfil_ingreso or resultado.perfil_egreso %}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;" class="profiles-grid">
   {% if resultado.perfil_ingreso %}
@@ -96,17 +66,16 @@
 </div>
 {% endif %}
 
-<!-- Otras carreras -->
 {% if resultado.otras_opciones %}
-<div class="other-careers-section" style="margin-top:8px;">
-  <h3>📊 Otras opciones con afinidad</h3>
-  {% for op in resultado.otras_opciones %}
-  <div class="other-career-item">
-    <span class="other-career-name">{{ op.Carrera }}</span>
-    <div class="other-career-bar-wrap"><div class="other-career-bar" style="width:{{ op.Similitud }}%"></div></div>
-    <span class="other-career-pct">{{ op.Similitud }}%</span>
+<div class="other-careers-section" style="margin-top:32px;">
+  <h3 style="margin-bottom:20px;">📊 Otras opciones con afinidad</h3>
+  
+  <div class="other-careers-grid"> {% for op in resultado.otras_opciones %}
+    <div class="secondary-result-card"> <div class="result-label-sm">Opción adicional</div>
+      <div class="secondary-career-name">{{ op.Carrera }}</div>
+    </div>
+    {% endfor %}
   </div>
-  {% endfor %}
 </div>
 {% endif %}
 
@@ -121,17 +90,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const circle = document.getElementById('circle-fill');
-    if (circle) {
-      const target = parseFloat(circle.getAttribute('stroke-dashoffset'));
-      circle.style.strokeDashoffset = '364.4';
-      setTimeout(() => {
-        circle.style.transition = 'stroke-dashoffset 1.6s cubic-bezier(0.4,0,0.2,1)';
-        circle.style.strokeDashoffset = target;
-      }, 300);
-    }
-  });
-</script>
 {% endblock %}
