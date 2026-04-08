@@ -8,11 +8,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import KNeighborsClassifier
 
 # Descargas necesarias de NLTK
+# Descargas necesarias de NLTK (Actualizado para la nube)
 try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
+    nltk.download('punkt_tab', quiet=True) 
+    nltk.download('punkt', quiet=True)
+    nltk.download('stopwords', quiet=True)
+except Exception as e:
+    print(f"[NLTK] Advertencia al descargar recursos: {e}")
 
 stemmer = SnowballStemmer('spanish')
 stop_words_base = set(stopwords.words('spanish'))
