@@ -148,16 +148,24 @@ class OrientadorAPI:
                 return {
                     "error": False,
                     "carrera_recomendada": carrera,
+                    "es_uv": bool(info),
                     "porcentaje": pct,
                     "explicacion": explicacion,
                     "nivel": self._nivel_afinidad(pct),
-                    "otras_opciones": resultados[1:6],
                     "total_respuestas": len(respuestas),
                     "facultad":    info.get("Facultad / entidad académica (región Orizaba-Córdoba)", "No disponible"),
                     "municipio":   info.get("Municipio(s) donde se ofrece en la región", "No disponible"),
                     "modalidad":   info.get("Modalidad(es) en la región", "No disponible"),
-                    "perfil_ingreso": info.get("Perfil de ingreso (síntesis)", "Consulta el portal oficial."),
-                    "perfil_egreso":  info.get("Perfil de egreso (síntesis)", "Consulta el portal oficial."),
+                    "perfil_ingreso": info.get("Perfil de Ingreso (Expandido)", "Consulta el portal oficial."),
+                    "perfil_egreso":  info.get("Perfil de Egreso (Expandido)", "Consulta el portal oficial."),
+                    "url_oficial": info.get("consulta_web", "#"),
+                    "otras_opciones": [
+                        {
+                            "Carrera": op["Carrera"],
+                            "es_uv": bool(self.info_carrera(op["Carrera"])),
+                            "url_oficial": self.info_carrera(op["Carrera"]).get("consulta_web", "#")
+                        } for op in resultados[1:6]
+                    ]
                 }
 
             except Exception as e:
@@ -173,21 +181,21 @@ class OrientadorAPI:
         return (f"El análisis semántico mostró una afinidad del {pct}% con {carrera}. "
                 "Las habilidades e intereses que describiste se alinean con el perfil académico de esta carrera en Campus Ixtac.")
 
-def _resultado_error(self, tipo_error="desconocido"):
-        """Devuelve un objeto de resultado que la interfaz reconoce como un fallo técnico."""
-        mensajes = {
-            "modelo": "No pudimos cargar el catálogo de carreras. Por favor, contacta al administrador.",
-            "nlp": "Hubo un problema al procesar tus respuestas. ¿Podrías intentarlo de nuevo?",
-            "vacio": "No logramos encontrar una coincidencia clara con tu perfil. Intenta ser más descriptivo en tus respuestas.",
-            "desconocido": "Algo salió mal en nuestro servidor. Estamos trabajando para solucionarlo."
-        }
-        
-        return {
-            "error": True,
-            "tipo": tipo_error,
-            "carrera_recomendada": "Error de Procesamiento",
-            "explicacion": mensajes.get(tipo_error, mensajes["desconocido"]),
-            "porcentaje": 0,
-            "nivel": "n/a",
-            "otras_opciones": []
-        }
+    def _resultado_error(self, tipo_error="desconocido"):
+            """Devuelve un objeto de resultado que la interfaz reconoce como un fallo técnico."""
+            mensajes = {
+                "modelo": "No pudimos cargar el catálogo de carreras. Por favor, contacta al administrador.",
+                "nlp": "Hubo un problema al procesar tus respuestas. ¿Podrías intentarlo de nuevo?",
+                "vacio": "No logramos encontrar una coincidencia clara con tu perfil. Intenta ser más descriptivo en tus respuestas.",
+                "desconocido": "Algo salió mal en nuestro servidor. Estamos trabajando para solucionarlo."
+            }
+            
+            return {
+                "error": True,
+                "tipo": tipo_error,
+                "carrera_recomendada": "Error de Procesamiento",
+                "explicacion": mensajes.get(tipo_error, mensajes["desconocido"]),
+                "porcentaje": 0,
+                "nivel": "n/a",
+                "otras_opciones": []
+            }

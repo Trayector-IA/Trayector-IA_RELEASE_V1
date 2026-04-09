@@ -276,6 +276,28 @@ def api_reset():
     session.clear()
     return jsonify({'success': True})
 
+@app.route('/test-diseno')
+def test_diseno():
+    # Datos simulados con información realista de la UV región Orizaba-Córdoba
+    resultado_falso = {
+        "total_respuestas": 10,
+        "carrera_recomendada": "Ingeniería de Software",
+        "explicacion": "Tienes un gran interés en resolver problemas tecnológicos y la ciberseguridad, lo cual se alinea perfectamente con el enfoque de esta carrera.",
+        "facultad": "Facultad de Negocios y Tecnologías",
+        "municipio": "Ixtaczoquitlán",
+        "modalidad": "Escolarizada",
+        "perfil_ingreso": "Interés por el desarrollo de software, pensamiento lógico-matemático y vocación por la tecnología.",
+        "perfil_egreso": "Profesional capaz de diseñar, desarrollar e implementar soluciones de software innovadoras y seguras.",
+        "otras_opciones": [
+            {"Carrera": "Tecnologías de Información en las Organizaciones", "Similitud": 85},
+            {"Carrera": "Ingeniería en Sistemas Computacionales", "Similitud": 78},
+            {"Carrera": "Redes y Servicios de Cómputo", "Similitud": 65}
+        ]
+    }
+    
+    # Renderizamos la plantilla saltando el candado
+    return render_template('resultados.html', locked=False, resultado=resultado_falso)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

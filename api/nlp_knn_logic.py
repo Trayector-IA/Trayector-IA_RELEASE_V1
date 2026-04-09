@@ -109,17 +109,20 @@ def analizar_afinidad(respuestas_alumno, vectorizador, modelo_knn, clases):
 
 def obtener_lista_carreras(ruta_csv):
     carreras = set()
-    with open(ruta_csv, mode='r', encoding='utf-8') as f:
+    # Usamos utf-8-sig para ignorar el BOM de Excel
+    with open(ruta_csv, mode='r', encoding='utf-8-sig') as f:
         lector = csv.DictReader(f)
         for fila in lector:
-            carreras.add(fila.get('Programa educativo', ''))
+            carreras.add(fila.get('Programa educativo', '').strip())
     # Filtramos por si hay filas vacías
     return sorted([c for c in carreras if c])
 
 def obtener_info_carrera(ruta_csv, nombre_carrera):
-    with open(ruta_csv, mode='r', encoding='utf-8') as f:
+    # Usamos utf-8-sig para ignorar el BOM de Excel
+    with open(ruta_csv, mode='r', encoding='utf-8-sig') as f:
         lector = csv.DictReader(f)
         for fila in lector:
-            if fila.get('Programa educativo', '') == nombre_carrera:
+            # Usamos .strip() en ambos lados para que coincidan sin importar los espacios extra
+            if fila.get('Programa educativo', '').strip() == nombre_carrera.strip():
                 return fila
     return {}

@@ -8,84 +8,103 @@
 {% block content %}
 <div class="container results-page">
 
-{% if locked %}
-<div class="results-locked">
-  <div class="lock-icon">🔒</div>
-  <h2>Resultados no disponibles</h2>
-  <p>Debes completar la entrevista vocacional (10 preguntas) para desbloquear tu resultado personalizado.</p>
-  <a href="/orientador" class="btn btn-primary">🚀 Iniciar entrevista</a>
-  <a href="/" class="btn btn-ghost">Volver al inicio</a>
-</div>
-
-{% else %}
-
-<div class="result-header">
-  <div class="result-chip">✓ Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
-  <h1>Tu recomendación vocacional</h1>
-  <p style="color:var(--color-text-muted);font-size:0.95rem;max-width:520px;margin:10px auto 0;">
-    Basado en NLP + TF-IDF + KNN aplicado a tu perfil de ingreso y proyección profesional.
-  </p>
-</div>
-
-<div class="affinity-alert high">
-  <span><strong>¡Análisis completado!</strong> Estas son las opciones académicas que mejor se alinean con tu perfil e intereses.</span>
-</div>
-
-<div class="main-result-card">
-  <div class="result-content">
-    <div class="result-label-sm">Carrera recomendada</div>
-    <div class="career-name">{{ resultado.carrera_recomendada }}</div>
-
-    {% if resultado.facultad %}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-      <span class="badge" style="font-size:0.7rem;">🏫 {{ resultado.facultad|truncate(60) }}</span>
-      {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;">📍 {{ resultado.municipio|truncate(40) }}</span>{% endif %}
-      {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;">📋 {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
-    </div>
-    {% endif %}
-
-    <div class="result-label-sm" style="margin-bottom:10px;">¿Por qué esta carrera?</div>
-    <div class="result-explanation">{{ resultado.explicacion }}</div>
+  {% if locked %}
+  <div class="results-locked">
+    <div class="lock-icon">🔒</div>
+    <h2>Resultados no disponibles</h2>
+    <p>Debes completar la entrevista vocacional (10 preguntas) para desbloquear tu resultado personalizado.</p>
+    <a href="/orientador" class="btn btn-primary">🚀 Iniciar entrevista</a>
+    <a href="/" class="btn btn-ghost">Volver al inicio</a>
   </div>
-</div>
 
-{% if resultado.perfil_ingreso or resultado.perfil_egreso %}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;" class="profiles-grid">
-  {% if resultado.perfil_ingreso %}
-  <div class="card" style="border-left:3px solid var(--color-primary);">
-    <div class="result-label-sm" style="margin-bottom:8px;">📋 Perfil de ingreso de la carrera</div>
-    <p style="font-size:0.82rem;color:var(--color-text-muted);line-height:1.65;">{{ resultado.perfil_ingreso }}</p>
+  {% else %}
+
+  <div class="result-header">
+    <div class="result-chip">✓ Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
+    <h1>Tu recomendación vocacional</h1>
+    <p style="color:var(--color-text-muted);font-size:0.95rem;max-width:520px;margin:10px auto 0;">
+      Basado en NLP + TF-IDF + KNN aplicado a tu perfil de ingreso y proyección profesional.
+    </p>
+  </div>
+
+  <div class="affinity-alert high">
+    <span><strong>¡Análisis completado!</strong> Estas son las opciones académicas que mejor se alinean con tu perfil e intereses.</span>
+  </div>
+
+  <div class="main-result-card">
+    <div class="result-content" style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center;">
+      <div class="result-label-sm">Carrera recomendada</div>
+      <div class="career-name">{{ resultado.carrera_recomendada }}</div>
+
+      {% if resultado.es_uv %}
+        <div style="color: var(--color-success); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
+            ✅ Disponible en Universidad Veracruzana (Región Orizaba-Córdoba)
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:20px;">
+          {% if resultado.facultad %}<span class="badge" style="font-size:0.7rem;">🏫 {{ resultado.facultad|truncate(60) }}</span>{% endif %}
+          {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;">📍 {{ resultado.municipio|truncate(40) }}</span>{% endif %}
+          {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;">📋 {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
+        </div>
+      {% else %}
+        <div style="background: var(--color-bg-subtle); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
+            <span style="font-size: 0.85rem; color: var(--color-text-muted);">
+                ✨ Esta carrera no se encuentra actualmente en tu región, pero es la que más se alinea con tu perfil global.
+            </span>
+        </div>
+      {% endif %}
+
+      <div class="result-label-sm" style="margin-bottom:10px;">¿Por qué esta carrera?</div>
+      <div class="result-explanation" style="margin-bottom: 25px;">{{ resultado.explicacion }}</div>
+
+      {% if resultado.url_oficial and resultado.url_oficial != "#" %}
+      <div style="margin-top: 10px; border-top: 1px solid var(--color-border); padding-top: 20px; display: flex; justify-content: center; width: 100%;">
+        <a href="{{ resultado.url_oficial }}" target="_blank" class="btn btn-primary"
+          style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 1rem; border-radius: 8px;">
+           Ver plan de estudios en UV
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if resultado.otras_opciones %}
+  <div class="other-careers-section" style="margin-top:24px; margin-bottom:32px;">
+    <h3 style="margin-bottom:16px; font-size:1.1rem; color:var(--color-text-muted); text-align: center;">📊 También podrían interesarte:</h3>
+
+    <div class="other-careers-grid">
+      {% for op in resultado.otras_opciones %}
+      <div class="secondary-result-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px;">
+        <div class="result-label-sm" style="margin-bottom: 6px;">Opción adicional</div>
+        <div class="secondary-career-name" style="margin-bottom: 10px;">{{ op.Carrera }}</div>
+        
+        {% if op.es_uv %}
+          <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+            <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;">📍 Sede UV</span>
+            
+            {% if op.url_oficial and op.url_oficial != "#" %}
+            <a href="{{ op.url_oficial }}" target="_blank" class="btn-link" 
+               style="font-size: 0.75rem; color: var(--color-primary); text-decoration: underline; font-weight: 600;">
+              Ver plan de estudios
+            </a>
+            {% endif %}
+          </div>
+        {% else %}
+          <span style="font-size: 0.7rem; color: var(--color-text-muted);"> Opción Externa</span>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+    </div>
   </div>
   {% endif %}
-  {% if resultado.perfil_egreso %}
-  <div class="card" style="border-left:3px solid var(--color-success);">
-    <div class="result-label-sm" style="margin-bottom:8px;">🎓 Perfil de egreso de la carrera</div>
-    <p style="font-size:0.82rem;color:var(--color-text-muted);line-height:1.65;">{{ resultado.perfil_egreso }}</p>
+
+  <div class="result-actions">
+    <a href="/orientador" class="btn btn-primary">↺ Nueva evaluación</a>
+    <a href="/" class="btn btn-outline">← Inicio</a>
+    <button onclick="window.print()" class="btn btn-ghost">🖨️ Imprimir</button>
   </div>
+
   {% endif %}
-</div>
-{% endif %}
-
-{% if resultado.otras_opciones %}
-<div class="other-careers-section" style="margin-top:32px;">
-  <h3 style="margin-bottom:20px;">📊 Otras opciones con afinidad</h3>
-  
-  <div class="other-careers-grid"> {% for op in resultado.otras_opciones %}
-    <div class="secondary-result-card"> <div class="result-label-sm">Opción adicional</div>
-      <div class="secondary-career-name">{{ op.Carrera }}</div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-<div class="result-actions">
-  <a href="/orientador" class="btn btn-primary">↺ Nueva evaluación</a>
-  <a href="/" class="btn btn-outline">← Inicio</a>
-  <button onclick="window.print()" class="btn btn-ghost">🖨️ Imprimir</button>
-</div>
-
-{% endif %}
 </div>
 {% endblock %}
 

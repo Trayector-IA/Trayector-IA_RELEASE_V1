@@ -212,9 +212,18 @@
 
 /* Contenedor de la cuadrícula (responsive) */
 .other-careers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px; /* Espacio entre tarjetas */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* auto-fit ayuda a distribuir */
+    gap: 16px;
+    justify-content: center; /* Centra las tarjetas si la fila no se llena */
+    text-align: center;      /* Centra el texto dentro de las tarjetas secundarias */
+}
+
+.secondary-result-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Estilo de la tarjeta secundaria (basada en la principal) */
