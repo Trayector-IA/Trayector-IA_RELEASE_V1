@@ -59,6 +59,10 @@ BLOQUES = {
 
 def obtener_saludo_inicial() -> str:
     """Genera el saludo dinámico con Groq y lanza la primera pregunta."""
+    # max_tokens=600: el saludo completo del LLM ronda 250-300 palabras en
+    # español (≈ 420-500 tokens). 600 garantiza que ninguna respuesta natural
+    # quede truncada a mitad de frase, independientemente de la variación
+    # de verbosidad del modelo entre llamadas.
     prompt = (
         "Eres Trayector-IA, un orientador vocacional empático y profesional de la "
         "Universidad Veracruzana, Facultad de Negocios y Tecnologías, Campus Ixtac.\n\n"
@@ -69,7 +73,11 @@ def obtener_saludo_inicial() -> str:
         "y encontrar la carrera universitaria que mejor se adapte a su perfil.\n\n"
         "Pídele que responda con detalle y honestidad, ya que la calidad del análisis "
         "depende de la profundidad de sus respuestas.\n\n"
-        f"Finalmente, formula esta primera pregunta:\n\"{PREGUNTAS[0]}\"\n\n"
+        f"Finalmente, formula esta primera pregunta. "
+        f"Escríbela SIEMPRE en negritas usando dobles asteriscos, así: "
+        f"**{PREGUNTAS[0]}**\n\n"
+        "IMPORTANTE: completa siempre la última oración antes de terminar. "
+        "No dejes ningún pensamiento a medias."
     )
 
     try:
@@ -77,12 +85,23 @@ def obtener_saludo_inicial() -> str:
             messages=[{"role": "system", "content": prompt}],
             model="llama-3.3-70b-versatile",
             temperature=0.7,
-            max_tokens=350,
+            max_tokens=600,
         )
         return resp.choices[0].message.content
     except Exception as e:
         print(f"Error en Groq (saludo): {e}")
-        return f"¡Hola! Soy Trayector-IA, tu orientador vocacional. El asistente de IA conversacional está tomando un breve descanso, pero el sistema de análisis principal está activo. Vamos a comenzar: {PREGUNTAS[0]}"
+        return (
+            "¡Hola! Me alegra conocerte. Soy **Trayector-IA**, tu orientador vocacional "
+            "de la Universidad Veracruzana, Facultad de Negocios y Tecnologías.\n\n"
+            "Voy a realizarte **10 preguntas** organizadas en dos bloques: las primeras 5 "
+            "explorarán tu situación actual —tus intereses, habilidades y actividades que "
+            "disfrutas—, mientras que las últimas 5 explorarán tu visión profesional a "
+            "futuro. Con base en tus respuestas, el sistema de Inteligencia Artificial "
+            "identificará la carrera universitaria que mejor se adapte a tu perfil.\n\n"
+            "Es importante que respondas con detalle y honestidad: cuanto más profundas "
+            "sean tus respuestas, más precisa será la recomendación.\n\n"
+            f"**{PREGUNTAS[0]}**"
+        )
 
 # ── Evaluación de respuesta ───────────────────────────────────────────────────
 
@@ -122,8 +141,9 @@ def evaluar_respuesta_usuario(respuesta_usuario: str, indice_actual: int) -> dic
     else:
         prompt_sistema += (
             f"{aviso_bloque}\n"
-            f"2. Formula la siguiente pregunta (pregunta {indice_actual + 2}):\n"
-            f"\"{siguiente_pregunta}\""
+            f"2. Formula la siguiente pregunta (pregunta {indice_actual + 2}). "
+            f"Escríbela SIEMPRE en negritas usando dobles asteriscos, así: "
+            f"**{siguiente_pregunta}**"
         )
 
     prompt_sistema += (

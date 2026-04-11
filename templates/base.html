@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo-trayectoria_icono.svg') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}" />
   {% block extra_css %}{% endblock %}
 </head>
@@ -52,9 +53,9 @@
 
 <div class="header-actions">
       <div class="theme-toggle-wrap" title="Cambiar tema">
-        <span class="theme-icon" id="icon-sun" aria-hidden="true">☀️</span>
+        <span class="theme-icon" id="icon-sun" aria-hidden="true"><i data-lucide="sun"></i></span>
         <button id="theme-toggle" role="switch" aria-checked="false" aria-label="Cambiar modo oscuro/claro"></button>
-        <span class="theme-icon" id="icon-moon" aria-hidden="true">🌙</span>
+        <span class="theme-icon" id="icon-moon" aria-hidden="true"><i data-lucide="moon"></i></span>
       </div>
 
       {% if session.get('rol') == 'admin' %}
@@ -182,6 +183,8 @@
 </footer>
 
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 {% block extra_js %}{% endblock %}
+<script>lucide.createIcons();</script>
 </body>
 </html>

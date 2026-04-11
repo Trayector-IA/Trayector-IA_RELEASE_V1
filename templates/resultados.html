@@ -10,17 +10,17 @@
 
   {% if locked %}
   <div class="results-locked">
-    <div class="lock-icon">🔒</div>
+    <div class="lock-icon"><i data-lucide="lock"></i></div>
     <h2>Resultados no disponibles</h2>
     <p>Debes completar la entrevista vocacional (10 preguntas) para desbloquear tu resultado personalizado.</p>
-    <a href="/orientador" class="btn btn-primary">🚀 Iniciar entrevista</a>
+    <a href="/orientador" class="btn btn-primary"><i data-lucide="rocket"></i> Iniciar entrevista</a>
     <a href="/" class="btn btn-ghost">Volver al inicio</a>
   </div>
 
   {% else %}
 
   <div class="result-header">
-    <div class="result-chip">✓ Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
+    <div class="result-chip"><i data-lucide="check-circle"></i> Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
     <h1>Tu recomendación vocacional</h1>
     <p style="color:var(--color-text-muted);font-size:0.95rem;max-width:520px;margin:10px auto 0;">
       Basado en NLP + TF-IDF + KNN aplicado a tu perfil de ingreso y proyección profesional.
@@ -37,18 +37,18 @@
       <div class="career-name">{{ resultado.carrera_recomendada }}</div>
 
       {% if resultado.es_uv %}
-        <div style="color: var(--color-success); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
-            ✅ Disponible en Universidad Veracruzana (Región Orizaba-Córdoba)
+        <div class="icon-status" style="color: var(--color-success); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
+            <i data-lucide="check-circle"></i> Disponible en Universidad Veracruzana (Región Orizaba-Córdoba)
         </div>
         <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:20px;">
-          {% if resultado.facultad %}<span class="badge" style="font-size:0.7rem;">🏫 {{ resultado.facultad|truncate(60) }}</span>{% endif %}
-          {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;">📍 {{ resultado.municipio|truncate(40) }}</span>{% endif %}
-          {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;">📋 {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
+          {% if resultado.facultad %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="building-2"></i> {{ resultado.facultad|truncate(60) }}</span>{% endif %}
+          {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="map-pin"></i> {{ resultado.municipio|truncate(40) }}</span>{% endif %}
+          {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="clipboard-list"></i> {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
         </div>
       {% else %}
         <div style="background: var(--color-bg-subtle); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
-            <span style="font-size: 0.85rem; color: var(--color-text-muted);">
-                ✨ Esta carrera no se encuentra actualmente en tu región, pero es la que más se alinea con tu perfil global.
+            <span class="icon-inline" style="font-size: 0.85rem; color: var(--color-text-muted);">
+                <i data-lucide="info"></i> Esta carrera no se encuentra actualmente en tu región, pero es la que más se alinea con tu perfil global.
             </span>
         </div>
       {% endif %}
@@ -69,7 +69,7 @@
 
   {% if resultado.otras_opciones %}
   <div class="other-careers-section" style="margin-top:24px; margin-bottom:32px;">
-    <h3 style="margin-bottom:16px; font-size:1.1rem; color:var(--color-text-muted); text-align: center;">📊 También podrían interesarte:</h3>
+    <h3 class="icon-section-h3" style="margin-bottom:16px; font-size:1.1rem; color:var(--color-text-muted); text-align: center;"><i data-lucide="bar-chart-2"></i> También podrían interesarte:</h3>
 
     <div class="other-careers-grid">
       {% for op in resultado.otras_opciones %}
@@ -79,7 +79,7 @@
         
         {% if op.es_uv %}
           <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;">📍 Sede UV</span>
+            <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;"><i data-lucide="map-pin" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i> Sede UV</span>
             
             {% if op.url_oficial and op.url_oficial != "#" %}
             <a href="{{ op.url_oficial }}" target="_blank" class="btn-link" 
@@ -101,7 +101,7 @@
   <div class="result-actions">
     <a href="/orientador" class="btn btn-primary">↺ Nueva evaluación</a>
     <a href="/" class="btn btn-outline">← Inicio</a>
-    <button onclick="window.print()" class="btn btn-ghost">🖨️ Imprimir</button>
+    <button onclick="window.print()" class="btn btn-ghost"><i data-lucide="printer"></i> Imprimir</button>
   </div>
 
   {% endif %}

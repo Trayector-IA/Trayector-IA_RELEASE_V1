@@ -136,9 +136,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
   flex-shrink: 0;
+  /* Fondo coloreado → logo blanco */
+  color: #ffffff;
 }
+
+.ai-avatar .brand-icon { width: 22px; height: auto; }
 
 .ai-card-header-info strong {
   display: block;
@@ -315,17 +318,24 @@
 }
 
 /* ── Careers section ───────────────────────────────────────── */
+/* Flexbox + justify-content:center garantiza que la última fila
+   parcial (26 % 6 = 2 tarjetas) quede siempre centrada.
+   flex: 1 0 155px / max-width:188px → ~6 por fila en desktop,
+   se ajusta fluidamente a 5→4→3→2 en viewports más estrechos. */
 .career-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
 .career-card {
+  flex: 1 0 155px;
+  max-width: 188px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 24px 20px;
+  padding: 22px 16px;
   text-align: center;
   cursor: default;
   transition: all var(--transition);
@@ -339,21 +349,28 @@
 }
 
 .career-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 12px;
+  color: var(--color-primary);
 }
 
 .career-card h3 {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.4;
 }
 
 /* ── Tech stack ────────────────────────────────────────────── */
+/* 8 elementos → exactamente 4 por fila = 2 filas perfectas.
+   Sin auto-fill: ninguna tecnología queda sola en una fila inferior. */
 .tech-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .tech-card {
@@ -398,11 +415,7 @@
 }
 
 .institution-section::before {
-  content: '🏛️';
-  position: absolute;
-  right: 48px; top: -20px;
-  font-size: 8rem;
-  opacity: 0.06;
+  content: none;   /* decorativo eliminado — sustituido por elemento SVG si se requiere */
 }
 
 .institution-meta {
@@ -428,9 +441,31 @@
   .steps-grid { grid-template-columns: repeat(2, 1fr); }
   .steps-grid::before { display: none; }
   .institution-section { grid-template-columns: 1fr; padding: 40px; }
+
+  /* Carreras: max-width mayor → más espacio → sigue en ~5 por fila */
+  .career-card { flex: 1 0 145px; max-width: 180px; }
+
+  /* Tech: mantiene 4 por fila en tablet, tarjetas más compactas */
+  .tech-grid { gap: 12px; }
+}
+
+@media (max-width: 680px) {
+  /* Carreras: ~3 por fila */
+  .career-card { flex: 1 0 140px; max-width: 200px; }
+
+  /* Tech: 4 por fila sigue funcionando, gap reducido */
+  .tech-grid { gap: 10px; }
 }
 
 @media (max-width: 600px) {
   .stats-strip { grid-template-columns: 1fr; }
   .steps-grid { grid-template-columns: 1fr; }
+
+  /* Carreras: 2 por fila en móvil */
+  .career-card { flex: 1 0 calc(50% - 8px); max-width: none; }
+}
+
+@media (max-width: 440px) {
+  /* Tech: 2 por fila en móvil muy pequeño */
+  .tech-grid { grid-template-columns: repeat(2, 1fr); }
 }

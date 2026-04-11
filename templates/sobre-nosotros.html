@@ -21,25 +21,25 @@
   <div class="mission-grid">
 
     <div class="mission-card">
-      <div class="mission-icon">🎯</div>
+      <div class="mission-icon"><i data-lucide="target"></i></div>
       <h3>Nuestra Misión</h3>
       <p>Proporcionar a los estudiantes de la Facultad de Negocios y Tecnologías una herramienta objetiva y basada en evidencia para identificar la carrera universitaria que mejor se alinea con sus intereses, habilidades y valores personales.</p>
     </div>
 
     <div class="mission-card">
-      <div class="mission-icon">💡</div>
+      <div class="mission-icon"><i data-lucide="lightbulb"></i></div>
       <h3>Propósito del sistema</h3>
       <p>Trayector-IA nació de la necesidad de complementar el asesoramiento vocacional presencial con una herramienta tecnológica accesible que use Inteligencia Artificial para ofrecer recomendaciones personalizadas en tiempo real.</p>
     </div>
 
     <div class="mission-card">
-      <div class="mission-icon">🏛️</div>
+      <div class="mission-icon"><i data-lucide="landmark"></i></div>
       <h3>Contexto académico</h3>
       <p>Desarrollado como proyecto académico en la <strong>Universidad Veracruzana, Campus Ixtac</strong>. El sistema aplica técnicas de Procesamiento de Lenguaje Natural (NLP) y aprendizaje automático para el análisis de perfiles vocacionales.</p>
     </div>
 
     <div class="mission-card">
-      <div class="mission-icon">🤝</div>
+      <div class="mission-icon"><i data-lucide="handshake"></i></div>
       <h3>Para los estudiantes</h3>
       <p>Diseñado pensando en estudiantes de bachillerato y primeros semestres que necesitan orientación clara, rápida y fundamentada para tomar una de las decisiones más importantes de su vida académica.</p>
     </div>
@@ -57,35 +57,35 @@
 
     <div class="pipeline-steps">
       <div class="pipe-step">
-        <div class="pipe-icon">💬</div>
+        <div class="pipe-icon"><i data-lucide="message-circle"></i></div>
         <div class="pipe-content">
           <h4>1. Entrevista conversacional</h4>
           <p>El LLM (Llama 3.3 via Groq) formula preguntas, valida las respuestas y mantiene una conversación fluida con el estudiante.</p>
         </div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-icon">🔤</div>
+        <div class="pipe-icon"><i data-lucide="type"></i></div>
         <div class="pipe-content">
           <h4>2. Preprocesamiento NLP</h4>
           <p>NLTK aplica tokenización, eliminación de stopwords en español y stemming (SnowballStemmer) a las respuestas del estudiante.</p>
         </div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-icon">📐</div>
+        <div class="pipe-icon"><i data-lucide="sigma"></i></div>
         <div class="pipe-content">
           <h4>3. Vectorización TF-IDF</h4>
           <p>Las respuestas procesadas se convierten en vectores numéricos que representan la relevancia de cada término en el perfil del estudiante.</p>
         </div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-icon">🔍</div>
+        <div class="pipe-icon"><i data-lucide="search"></i></div>
         <div class="pipe-content">
           <h4>4. Clasificación KNN</h4>
           <p>El algoritmo KNN (k=3, distancia coseno, ponderado por distancia) compara el perfil del estudiante con los perfiles académicos para calcular la afinidad por carrera.</p>
         </div>
       </div>
       <div class="pipe-step">
-        <div class="pipe-icon">✨</div>
+        <div class="pipe-icon"><i data-lucide="sparkles"></i></div>
         <div class="pipe-content">
           <h4>5. Explicación personalizada</h4>
           <p>El LLM genera una explicación humana y contextualizada que justifica la recomendación con base en las respuestas del estudiante.</p>
@@ -115,15 +115,15 @@
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
       {% set carreras = [
-        ('📊', 'Administración', 'Liderazgo organizacional y gestión empresarial.'),
-        ('🧾', 'Contabilidad', 'Análisis financiero, auditoría y gestión fiscal.'),
-        ('🏢', 'Gestión y Dirección de Negocios', 'Estrategia, innovación y emprendimiento.'),
-        ('💻', 'Ingeniería en Software', 'Desarrollo de software, sistemas y tecnología.'),
-        ('🏛️', 'Ciencias Políticas y Gestión Pública', 'Políticas públicas, gobierno y sociedad.'),
+        ('bar-chart-2', 'Administración', 'Liderazgo organizacional y gestión empresarial.'),
+        ('receipt', 'Contabilidad', 'Análisis financiero, auditoría y gestión fiscal.'),
+        ('building-2', 'Gestión y Dirección de Negocios', 'Estrategia, innovación y emprendimiento.'),
+        ('code-2', 'Ingeniería en Software', 'Desarrollo de software, sistemas y tecnología.'),
+        ('landmark', 'Ciencias Políticas y Gestión Pública', 'Políticas públicas, gobierno y sociedad.'),
       ] %}
       {% for icon, nombre, desc in carreras %}
       <div class="card">
-        <div style="font-size: 1.8rem; margin-bottom: 10px;">{{ icon }}</div>
+        <div class="sobre-card-icon" style="margin-bottom: 10px; color: var(--color-primary);"><i data-lucide="{{ icon }}"></i></div>
         <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px;">{{ nombre }}</h3>
         <p style="font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.6;">{{ desc }}</p>
       </div>
@@ -141,7 +141,7 @@
         La entrevista toma aproximadamente 10-15 minutos. Necesitas responder 6 preguntas con detalle.
       </p>
       <a href="/orientador" class="btn btn-primary" style="font-size: 1rem; padding: 16px 36px;">
-        🚀 Iniciar entrevista vocacional
+        <i data-lucide="rocket"></i> Iniciar entrevista vocacional
       </a>
     </div>
   </section>

@@ -8,27 +8,51 @@
 {% block content %}
 
 <div id="modal-acceso" class="modal-overlay">
-    <div class="modal-content">
-        <h2>Bienvenido a Trayector-IA</h2>
-        <p>Ingresa tu código de acceso para comenzar.</p>
-        
-        <input type="text" id="input-codigo" placeholder="Tu código (Ej. MAT-2024)">
-        <input type="password" id="input-password" placeholder="Contraseña admin" style="display: none;">
-        
-        <button id="btn-ingresar" onclick="validarAcceso()">Ingresar</but0ton>
-        
-        <p onclick="document.getElementById('input-password').style.display='block'" 
-           style="font-size: 10px; color: transparent; cursor: default; user-select: none; margin-top: 15px;">
-           .
-        </p>
+  <div class="modal-content">
+
+    <!-- Logo / ícono -->
+    <div class="modal-brand-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186.66 138.03" fill="currentColor" aria-hidden="true">
+        <path d="m186.66,67.44l-12.54,8.6v31.28c3.71,1.77,6.28,5.56,6.28,9.95,0,2.58-.89,4.95-2.37,6.83l5.01,8.67-9.1,5.25-4.56-7.9-4.56,7.9-9.1-5.25,5.01-8.67c-1.48-1.88-2.37-4.25-2.37-6.83,0-4.39,2.57-8.18,6.28-9.95v-24.77l-12.35,8.47L42.97,32.52l92.59,69.91.06,35.6-20.86-21.34-31.06,21.34L0,0l186.66,67.44Z"/>
+      </svg>
     </div>
+
+    <h2 class="modal-title">Bienvenido a Trayector-IA</h2>
+    <p class="modal-subtitle">Ingresa tu código de acceso para comenzar la entrevista vocacional.</p>
+
+    <div class="modal-field">
+      <label for="input-codigo" class="modal-label">Código de acceso</label>
+      <input type="text" id="input-codigo" class="modal-input" placeholder="Ej. MAT-2024" autocomplete="off">
+    </div>
+
+    <div class="modal-field" id="field-password" style="display:none;">
+      <label for="input-password" class="modal-label">Contraseña</label>
+      <input type="password" id="input-password" class="modal-input" placeholder="Contraseña de administrador">
+    </div>
+
+    <button id="btn-ingresar" class="modal-btn" onclick="validarAcceso()">
+      <i data-lucide="log-in"></i> Ingresar
+    </button>
+
+    <!-- Trigger oculto para panel admin -->
+    <span
+      onclick="document.getElementById('field-password').style.display='block'"
+      style="display:block;height:10px;cursor:default;user-select:none;"
+      aria-hidden="true"
+    ></span>
+
+  </div>
 </div>
 
-<div class="orientador-layout" id="interfaz-orientador">
+<div class="orientador-layout sidebar-collapsed" id="orientador-layout">
 
   <aside class="chat-sidebar" aria-label="Panel de progreso">
     <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">🤖</div>
+      <div class="sidebar-brand-icon">
+        <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186.66 138.03" fill="currentColor" aria-hidden="true">
+          <path d="m186.66,67.44l-12.54,8.6v31.28c3.71,1.77,6.28,5.56,6.28,9.95,0,2.58-.89,4.95-2.37,6.83l5.01,8.67-9.1,5.25-4.56-7.9-4.56,7.9-9.1-5.25,5.01-8.67c-1.48-1.88-2.37-4.25-2.37-6.83,0-4.39,2.57-8.18,6.28-9.95v-24.77l-12.35,8.47L42.97,32.52l92.59,69.91.06,35.6-20.86-21.34-31.06,21.34L0,0l186.66,67.44Z"/>
+        </svg>
+      </div>
       <div>
         <h2>Orientador IA</h2>
         <p>Entrevista vocacional · 10 preguntas</p>
@@ -52,7 +76,7 @@
     </div>
 
     <div class="sidebar-block">
-      <div class="block-label" id="block-label-0">📚 Bloque 1 — Perfil actual</div>
+      <div class="block-label" id="block-label-0"><i data-lucide="book-open"></i> Bloque 1 — Perfil actual</div>
       <div class="steps-list">
         {% set preguntas_cortas = [
           "Actividades y temas favoritos",
@@ -71,7 +95,7 @@
     </div>
 
     <div class="sidebar-block">
-      <div class="block-label" id="block-label-5">🔭 Bloque 2 — Proyección futura</div>
+      <div class="block-label" id="block-label-5"><i data-lucide="telescope"></i> Bloque 2 — Proyección futura</div>
       <div class="steps-list">
         {% set preguntas_cortas_2 = [
           "Trabajo ideal a 10 años",
@@ -90,7 +114,7 @@
     </div>
 
     <div class="sidebar-tip">
-      <div class="tip-label">💡 Consejo</div>
+      <div class="tip-label"><i data-lucide="lightbulb"></i> Consejo</div>
       <p>Responde con al menos 10 palabras. El sistema analiza el significado de tus palabras para encontrar la mejor coincidencia entre 25 carreras.</p>
     </div>
 
@@ -102,6 +126,9 @@
   <div class="chat-area">
     <div class="chat-topbar">
       <div class="chat-topbar-left">
+        <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Mostrar panel de progreso" title="Mostrar panel de progreso">
+          <i data-lucide="panel-left"></i>
+        </button>
         <div class="ai-status-dot"></div>
         <div>
           <h3>Trayector-IA</h3>
@@ -114,7 +141,7 @@
     <div class="messages-container" id="messages-container" aria-live="polite" role="log"></div>
 
     <div class="completion-banner" id="completion-banner">
-      <span>🎯 ¡Entrevista completada! Tu resultado está listo.</span>
+      <span><i data-lucide="check-circle"></i> ¡Entrevista completada! Tu resultado está listo.</span>
       <button id="view-results-btn" class="btn btn-primary" style="padding:10px 20px;">Ver mi resultado →</button>
     </div>
 
@@ -125,7 +152,7 @@
       </div>
       <div class="input-row">
         <textarea id="chat-input" placeholder="Escribe tu respuesta aquí (mínimo 10 palabras)..." rows="1" aria-label="Tu respuesta" disabled></textarea>
-        <button id="send-btn" aria-label="Enviar respuesta" disabled title="Enviar">➤</button>
+        <button id="send-btn" aria-label="Enviar respuesta" disabled title="Enviar"><i data-lucide="send"></i></button>
       </div>
     </div>
   </div>
@@ -136,6 +163,7 @@
 {% block extra_js %}
 <script>
   window.TOTAL_PREGUNTAS = 10;
+  window._USUARIO_ID = "{{ session.get('usuario_id', '') }}";
 </script>
 <script src="{{ url_for('static', filename='js/chat.js') }}?v=1.1"></script>
 {% endblock %}

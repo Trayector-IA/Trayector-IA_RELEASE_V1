@@ -7,66 +7,177 @@
   grid-template-columns: 300px 1fr;
   gap: 0;
   height: calc(100vh - var(--header-h));
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.orientador-layout.sidebar-collapsed {
+  grid-template-columns: 0px 1fr;
+}
+
+/* ── Sidebar toggle button ─────────────────────────────────── */
+.sidebar-toggle-btn {
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Rota el ícono cuando el panel está abierto */
+.orientador-layout:not(.sidebar-collapsed) .sidebar-toggle-btn svg {
+  transform: scaleX(-1);
+}
+
+/* ── Modal de acceso ────────────────────────────────────────── */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Bajamos la opacidad al 20% para que actúe como una sombra ligera */
-    background-color: rgba(0, 0, 0, 0.2); 
-    /* Subimos el desenfoque a 12px para el efecto cristal */
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px); /* Soporte vital para navegadores Safari */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
 }
 
-/* --- El recuadro blanco central --- */
 .modal-content {
-    background-color: var(--bg-color, #ffffff); 
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 64px var(--color-shadow), 0 0 0 1px var(--color-primary-dim);
+  text-align: center;
+  animation: modal-appear 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    color: var(--text-color, #333);
+@keyframes modal-appear {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    margin: 15px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 16px;
+/* ícono de marca centrado */
+.modal-brand-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #ffffff;
 }
 
-.modal-content button {
-    width: 100%;
-    padding: 12px;
-    background-color: #1e32df; /* Puedes cambiarlo al verde o azul de tu tema */
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.3s;
+.modal-brand-icon svg {
+  width: 32px;
+  height: auto;
+  fill: currentColor;
 }
 
-.modal-content button:hover {
-    background-color: #1e32df;
+.modal-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.modal-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+/* campos */
+.modal-field {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.modal-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  box-sizing: border-box;
+}
+
+.modal-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-dim);
+  background: var(--color-bg-card);
+}
+
+/* botón principal */
+.modal-btn {
+  width: 100%;
+  padding: 13px 20px;
+  margin-top: 8px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition);
+  letter-spacing: 0.01em;
+}
+
+.modal-btn:hover {
+  background: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+
+.modal-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 
@@ -78,7 +189,16 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  overflow-y: auto;
+  overflow: hidden;          /* clip contenido al contraer */
+  min-width: 0;              /* permite que grid lo lleve a 0px */
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-collapsed .chat-sidebar {
+  opacity: 0;
+  pointer-events: none;
+  border-right: none;
 }
 
 .sidebar-brand {
@@ -96,9 +216,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
   flex-shrink: 0;
+  /* Fondo coloreado → icono blanco para contraste óptimo */
+  color: #ffffff;
 }
+
+/* Logo vectorial Trayector-IA (sustituye al ícono de robot) */
+.brand-icon {
+  display: block;
+  fill: currentColor;
+}
+.sidebar-brand-icon .brand-icon { width: 26px; height: auto; }
+
+/* Avatar del bot en mensajes: fondo degradado → icono blanco */
+.msg-avatar.ai-av {
+  color: #ffffff;
+}
+.msg-avatar.ai-av .brand-icon  { width: 18px; height: auto; }
 
 .sidebar-brand h2 {
   font-size: 1rem;
@@ -349,6 +483,31 @@
   line-height: 1.6;
 }
 
+/* Párrafos dentro de las burbujas: el reset global aplica margin:0 a todos
+   los elementos, lo que comprime el texto del saludo inicial en un bloque
+   ilegible. Restauramos el espaciado inter-párrafo aquí. */
+.msg-bubble p {
+  margin-top: 0;
+  margin-bottom: 0.55em;
+}
+.msg-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+/* El saludo inicial puede ser largo; el bot message toma más ancho disponible */
+.message-row.bot {
+  max-width: 90%;
+}
+
+/* ── Resaltado de preguntas en negritas ──────────────────────────
+   El LLM envuelve cada pregunta con **dobles asteriscos**; formatMarkdown
+   los convierte en <strong>. Aplicamos color primario + peso 800 para que
+   la pregunta destaque visualmente del texto de transición del orientador. */
+.message-row.bot .msg-bubble strong {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
 .message-row.bot .msg-bubble {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -503,13 +662,18 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .orientador-layout {
+  /* En móvil el sidebar siempre ocupa su fila normal; ignoramos la clase collapsed */
+  .orientador-layout,
+  .orientador-layout.sidebar-collapsed {
     grid-template-columns: 1fr;
     height: auto;
     min-height: calc(100vh - var(--header-h));
   }
 
-  .chat-sidebar {
+  .chat-sidebar,
+  .sidebar-collapsed .chat-sidebar {
+    opacity: 1;
+    pointer-events: auto;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
     padding: 16px;
@@ -520,6 +684,9 @@
 
   .sidebar-brand { padding-bottom: 0; border-bottom: none; }
   .steps-list, .sidebar-tip { display: none; }
+
+  /* Ocultamos el botón toggle en móvil (el sidebar siempre está visible) */
+  .sidebar-toggle-btn { display: none; }
 
   .chat-area {
     height: calc(100vh - var(--header-h) - 140px);

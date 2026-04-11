@@ -17,7 +17,7 @@
     <div class="hero-grid">
       <div class="hero-content">
         <div class="hero-eyebrow anim-fade-up" data-delay="1">
-          <span class="badge">🧠 NLP · TF-IDF · KNN · LLM</span>
+          <span class="badge"><i data-lucide="brain"></i> NLP · TF-IDF · KNN · LLM</span>
         </div>
         <h1 class="hero-title anim-fade-up" data-delay="2">
           Descubre tu<br><span class="highlight">carrera ideal</span><br>con IA
@@ -26,14 +26,18 @@
           Trayector-IA analiza tus respuestas con Procesamiento de Lenguaje Natural para identificar la carrera que mejor se adapta a tu perfil, habilidades e intereses dentro de la oferta académica de la Universidad Veracruzana.
         </p>
         <div class="hero-actions anim-fade-up" data-delay="4">
-          <a href="/orientador" class="btn btn-primary">🚀 Probar orientador vocacional</a>
+          <a href="/orientador" class="btn btn-primary"><i data-lucide="rocket"></i> Probar orientador vocacional</a>
           <a href="#como-funciona" class="btn btn-ghost">¿Cómo funciona?</a>
         </div>
       </div>
       <div class="hero-visual anim-fade-up" data-delay="3">
         <div class="ai-card-visual">
           <div class="ai-card-header">
-            <div class="ai-avatar">🤖</div>
+            <div class="ai-avatar">
+              <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186.66 138.03" fill="currentColor" aria-hidden="true">
+                <path d="m186.66,67.44l-12.54,8.6v31.28c3.71,1.77,6.28,5.56,6.28,9.95,0,2.58-.89,4.95-2.37,6.83l5.01,8.67-9.1,5.25-4.56-7.9-4.56,7.9-9.1-5.25,5.01-8.67c-1.48-1.88-2.37-4.25-2.37-6.83,0-4.39,2.57-8.18,6.28-9.95v-24.77l-12.35,8.47L42.97,32.52l92.59,69.91.06,35.6-20.86-21.34-31.06,21.34L0,0l186.66,67.44Z"/>
+              </svg>
+            </div>
             <div class="ai-card-header-info">
               <strong>Trayector-IA</strong>
               <span>● Activo — Analizando perfil</span>
@@ -48,7 +52,7 @@
           <div class="ai-card-result">
             <div class="result-label">Resultado del análisis</div>
             <div class="result-career">Ingeniería de Software</div>
-            <div class="result-pct">✓ Afinidad: 87.4%</div>
+            <div class="result-pct"><i data-lucide="check"></i> Afinidad: 87.4%</div>
           </div>
         </div>
       </div>
@@ -102,13 +106,13 @@
     </div>
     <div class="grid-2" style="max-width:800px;margin:0 auto;">
       <div class="card">
-        <div style="font-size:1.6rem;margin-bottom:12px;">📚</div>
+        <div class="career-icon" style="margin-bottom:12px;color:var(--color-primary);"><i data-lucide="book-open"></i></div>
         <div class="label-mono" style="margin-bottom:8px;">Bloque 1 · Preguntas 1–5</div>
         <h3 style="font-size:1rem;margin-bottom:10px;">Perfil de ingreso</h3>
         <p style="font-size:0.85rem;color:var(--color-text-muted);line-height:1.65;">Exploran tu situación actual: actividades que disfrutas, rol en equipos, problemas que te motivan, habilidades que te describen y áreas de interés.</p>
       </div>
       <div class="card">
-        <div style="font-size:1.6rem;margin-bottom:12px;">🔭</div>
+        <div class="career-icon" style="margin-bottom:12px;color:var(--color-primary);"><i data-lucide="telescope"></i></div>
         <div class="label-mono" style="margin-bottom:8px;">Bloque 2 · Preguntas 6–10</div>
         <h3 style="font-size:1rem;margin-bottom:10px;">Proyección profesional</h3>
         <p style="font-size:0.85rem;color:var(--color-text-muted);line-height:1.65;">Exploran tu visión futura: trabajo ideal a 10 años, problemas a resolver, organizaciones donde trabajarías, impacto deseado y legado profesional.</p>
@@ -129,36 +133,36 @@
     </div>
     <div class="career-cards">
       {% set carreras_list = [
-        ("📊","Administración","FCA / FNyT, Campus Ixtac"),
-        ("🌱","Agroecología y Soberanía Alimentaria","Otras regiones UV"),
-        ("🏛️","Arquitectura","Facultad de Arquitectura, Córdoba"),
-        ("🔬","Biología","FCBA, campus Peñuela"),
-        ("🦷","Cirujano Dentista","Facultad de Odontología"),
-        ("🧾","Contaduría","FCA / FNyT, Campus Ixtac"),
-        ("⚖️","Derecho","DGSEA, región Orizaba-Córdoba"),
-        ("🏃","Educación Física, Deporte y Recreación","Extensión Orizaba"),
-        ("🏥","Enfermería","Campus Orizaba y Córdoba"),
-        ("🎨","Enseñanza de las Artes","Espacios culturales UV"),
-        ("🤝","Gestión Intercultural para el Desarrollo","UVI Grandes Montañas"),
-        ("💼","Gestión y Dirección de Negocios","FNyT, Campus Ixtac"),
-        ("🌿","Ingeniería Ambiental","FCQ Orizaba-Córdoba"),
-        ("🏗️","Ingeniería Civil","FIME, Ciudad Mendoza"),
-        ("💻","Ingeniería de Software","FNyT, Campus Ixtac"),
-        ("🌾","Ingeniería en Agronomía","FCBA, campus Peñuela"),
-        ("🍎","Ingeniería en Alimentos","FCQ Orizaba-Córdoba"),
-        ("🧬","Ingeniería en Biotecnología","FCQ Orizaba-Córdoba"),
-        ("⚙️","Ingeniería Industrial","FIME, Ciudad Mendoza"),
-        ("⚡","Ingeniería Mecánica Eléctrica","FIME, Ciudad Mendoza"),
-        ("🤖","Ingeniería Mecatrónica","FIME, Ciudad Mendoza"),
-        ("⚗️","Ingeniería Química","FCQ Orizaba-Córdoba"),
-        ("🩺","Médico Cirujano","Facultad de Medicina, Cd. Mendoza"),
-        ("🏭","Química Industrial","FCQ Orizaba-Córdoba"),
-        ("💊","Químico Farmacéutico Biólogo","FCQ Orizaba-Córdoba"),
-        ("📖","Sociología","SEA región Orizaba-Córdoba"),
+        ("bar-chart-2","Administración","FCA / FNyT, Campus Ixtac"),
+        ("leaf","Agroecología y Soberanía Alimentaria","Otras regiones UV"),
+        ("landmark","Arquitectura","Facultad de Arquitectura, Córdoba"),
+        ("microscope","Biología","FCBA, campus Peñuela"),
+        ("cross","Cirujano Dentista","Facultad de Odontología"),
+        ("receipt","Contaduría","FCA / FNyT, Campus Ixtac"),
+        ("scale","Derecho","DGSEA, región Orizaba-Córdoba"),
+        ("activity","Educación Física, Deporte y Recreación","Extensión Orizaba"),
+        ("heart-pulse","Enfermería","Campus Orizaba y Córdoba"),
+        ("palette","Enseñanza de las Artes","Espacios culturales UV"),
+        ("users","Gestión Intercultural para el Desarrollo","UVI Grandes Montañas"),
+        ("briefcase","Gestión y Dirección de Negocios","FNyT, Campus Ixtac"),
+        ("wind","Ingeniería Ambiental","FCQ Orizaba-Córdoba"),
+        ("hard-hat","Ingeniería Civil","FIME, Ciudad Mendoza"),
+        ("code-2","Ingeniería de Software","FNyT, Campus Ixtac"),
+        ("wheat","Ingeniería en Agronomía","FCBA, campus Peñuela"),
+        ("apple","Ingeniería en Alimentos","FCQ Orizaba-Córdoba"),
+        ("dna","Ingeniería en Biotecnología","FCQ Orizaba-Córdoba"),
+        ("settings-2","Ingeniería Industrial","FIME, Ciudad Mendoza"),
+        ("zap","Ingeniería Mecánica Eléctrica","FIME, Ciudad Mendoza"),
+        ("cpu","Ingeniería Mecatrónica","FIME, Ciudad Mendoza"),
+        ("flask-conical","Ingeniería Química","FCQ Orizaba-Córdoba"),
+        ("stethoscope","Médico Cirujano","Facultad de Medicina, Cd. Mendoza"),
+        ("factory","Química Industrial","FCQ Orizaba-Córdoba"),
+        ("pill","Químico Farmacéutico Biólogo","FCQ Orizaba-Córdoba"),
+        ("book-open","Sociología","SEA región Orizaba-Córdoba"),
       ] %}
       {% for icon, nombre, sede in carreras_list %}
       <div class="career-card anim-fade-up" data-delay="{{ loop.index % 6 + 1 }}">
-        <div class="career-icon">{{ icon }}</div>
+        <div class="career-icon"><i data-lucide="{{ icon }}"></i></div>
         <h3>{{ nombre }}</h3>
         <p style="font-size:0.72rem;color:var(--color-text-muted);margin-top:6px;line-height:1.4;">{{ sede }}</p>
       </div>
@@ -180,11 +184,11 @@
         <a href="/orientador" class="btn btn-primary" style="margin-top:24px;">Comenzar evaluación →</a>
       </div>
       <div class="institution-meta">
-        <div class="institution-tag">🎓 Universidad Veracruzana</div>
-        <div class="institution-tag">🏫 Campus Ixtaczoquitlán</div>
-        <div class="institution-tag">💼 Fac. de Negocios y Tecnologías</div>
-        <div class="institution-tag">📍 Región Orizaba-Córdoba</div>
-        <div class="institution-tag">🤖 NLP + TF-IDF + KNN</div>
+        <div class="institution-tag"><i data-lucide="graduation-cap"></i> Universidad Veracruzana</div>
+        <div class="institution-tag"><i data-lucide="building-2"></i> Campus Ixtaczoquitlán</div>
+        <div class="institution-tag"><i data-lucide="briefcase"></i> Fac. de Negocios y Tecnologías</div>
+        <div class="institution-tag"><i data-lucide="map-pin"></i> Región Orizaba-Córdoba</div>
+        <div class="institution-tag"><i data-lucide="cpu"></i> NLP + TF-IDF + KNN</div>
       </div>
     </div>
   </div>
@@ -198,14 +202,14 @@
       <h2 class="section-title" style="margin-top:8px;">Tecnologías utilizadas</h2>
     </div>
     <div class="tech-grid">
-      <div class="tech-card"><div class="tech-icon">🐍</div><span>Python</span></div>
-      <div class="tech-card"><div class="tech-icon">🤖</div><span>Machine Learning</span></div>
-      <div class="tech-card"><div class="tech-icon">🔤</div><span>NLTK / NLP</span></div>
-      <div class="tech-card"><div class="tech-icon">🌐</div><span>Flask API</span></div>
-      <div class="tech-card"><div class="tech-icon">📐</div><span>HTML5</span></div>
-      <div class="tech-card"><div class="tech-icon">🎨</div><span>CSS3</span></div>
-      <div class="tech-card"><div class="tech-icon">⚡</div><span>JavaScript</span></div>
-      <div class="tech-card"><div class="tech-icon">📊</div><span>TF-IDF / KNN</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="code"></i></div><span>Python</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="brain"></i></div><span>Machine Learning</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="type"></i></div><span>NLTK / NLP</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="globe"></i></div><span>Flask API</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="layout-template"></i></div><span>HTML5</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="palette"></i></div><span>CSS3</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="zap"></i></div><span>JavaScript</span></div>
+      <div class="tech-card"><div class="tech-icon"><i data-lucide="bar-chart-2"></i></div><span>TF-IDF / KNN</span></div>
     </div>
   </div>
 </section>
@@ -219,7 +223,7 @@
       La entrevista consta de <strong>10 preguntas abiertas</strong> en dos bloques. Solo necesitas ser honesto y detallado en tus respuestas.
     </p>
     <a href="/orientador" class="btn btn-primary" style="font-size:1rem;padding:16px 36px;">
-      🚀 Iniciar orientación vocacional
+      <i data-lucide="rocket"></i> Iniciar orientación vocacional
     </a>
   </div>
 </section>

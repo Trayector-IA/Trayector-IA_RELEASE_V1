@@ -302,7 +302,48 @@ nav.main-nav a.active {
 .theme-icon {
   font-size: 0.85rem;
   color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
 }
+
+/* ── Lucide Vector Icons ─────────────────────────────────────── */
+/* Base: Lucide reemplaza <i data-lucide="..."> con <svg class="lucide ..."> */
+svg.lucide {
+  display: inline-block;
+  vertical-align: middle;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+/* Tamaños por contexto */
+.theme-icon svg.lucide              { width: 16px; height: 16px; }
+.career-icon svg.lucide             { width: 26px; height: 26px; }
+.mission-icon svg.lucide            { width: 30px; height: 30px; }
+.pipe-icon svg.lucide               { width: 26px; height: 26px; }
+.tech-icon svg.lucide               { width: 22px; height: 22px; }
+.sidebar-brand-icon svg.lucide      { width: 26px; height: 26px; color: #fff; }
+.block-label svg.lucide             { width: 15px; height: 15px; vertical-align: -3px; margin-right: 5px; }
+.tip-label svg.lucide               { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+.institution-tag svg.lucide         { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+.lock-icon svg.lucide               { width: 52px; height: 52px; opacity: 0.5; }
+.btn svg.lucide                     { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; }
+.badge svg.lucide                   { width: 11px; height: 11px; vertical-align: -1px; margin-right: 3px; }
+.result-chip svg.lucide             { width: 14px; height: 14px; vertical-align: -2px; margin-right: 5px; }
+.completion-banner svg.lucide       { width: 18px; height: 18px; vertical-align: -4px; margin-right: 6px; }
+.ai-avatar svg.lucide               { width: 20px; height: 20px; }
+.result-pct svg.lucide              { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+.icon-section-h3 svg.lucide         { width: 18px; height: 18px; vertical-align: -4px; margin-right: 8px; }
+.icon-status svg.lucide             { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; }
+.sobre-card-icon svg.lucide         { width: 28px; height: 28px; }
+.icon-inline svg.lucide             { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+
+/* Avatares del chat (generados por JS) */
+.msg-avatar svg                     { width: 18px; height: 18px; display: block; }
+.msg-warning svg                    { width: 14px; height: 14px; vertical-align: -2px; flex-shrink: 0; }
 
 /* ── Hamburger (mobile) ────────────────────────────────────── */
 .hamburger {
@@ -541,18 +582,27 @@ main {
   flex-shrink: 0;
   transition: opacity var(--transition);
 }
-.logo-link:hover { opacity: 0.75; }
+.logo-link:hover { opacity: 0.72; }
 
-/* SVG viewBox: 960.1 × 138.02 → ratio 6.96:1
-   A 40px de alto el ancho natural es ~278px, pero lo contenemos */
+/* SVG viewBox: 960.1 × 138.02 → ratio ≈ 6.96 : 1
+   A 36px de alto el ancho natural es ~250px — proporción óptima
+   para un header de 72px (logo = 50 % de la altura del header).
+
+   Positivo (light mode): color oscuro sobre fondo claro   ← OK con var(--color-text)
+   Negativo (dark mode):  blanco puro sobre fondo muy oscuro ← explícito abajo */
 .logo-img {
-  color: var(--color-text);   /* currentColor para todos los paths sin fill propio */
-  height: 40px;
+  color: var(--color-text);
+  height: 36px;
   width: auto;
-  max-width: 260px;
+  max-width: 252px;   /* holgura mínima sobre el ancho natural de 250px */
   display: block;
   overflow: visible;
   transition: color var(--transition);
+}
+
+/* Negativo explícito: blanco puro para máximo contraste en header oscuro */
+.dark-mode .logo-img {
+  color: #ffffff;
 }
 
 /* ── Logo Trayector-IA — footer ──────────────────────────── */
@@ -560,13 +610,17 @@ main {
 
 .footer-logo-img {
   color: var(--color-text);
-  height: 32px;
+  height: 30px;
   width: auto;
-  max-width: 220px;
+  max-width: 210px;
   display: block;
-  opacity: 0.85;
   overflow: visible;
-  transition: color var(--transition), opacity var(--transition);
+  transition: color var(--transition);
+}
+
+/* Versión negativa en footer oscuro */
+.dark-mode .footer-logo-img {
+  color: rgba(255, 255, 255, 0.88);
 }
 
 /* ── Logo UV — footer (vertical, casi cuadrado viewBox 136×118) ── */
@@ -614,13 +668,13 @@ main {
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .logo-img        { height: 34px; }
-  .footer-logo-img { height: 28px; }
+  .logo-img        { height: 30px; }
+  .footer-logo-img { height: 26px; }
 }
 
 @media (max-width: 660px) {
-  .logo-img               { height: 30px; max-width: 200px; }
-  .footer-logo-img        { height: 26px; max-width: 180px; }
+  .logo-img               { height: 26px; max-width: 182px; }
+  .footer-logo-img        { height: 22px; max-width: 165px; }
   .institutional-logo     { width: 90px; }
   .institutional-logo-zone{ min-height: 140px; padding: 14px 10px 10px; }
 }}

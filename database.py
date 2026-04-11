@@ -1,5 +1,6 @@
 import os
 import bcrypt
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from dotenv import load_dotenv, find_dotenv
 
@@ -69,6 +70,52 @@ class Database:
             print(f"[DEBUG] Error al buscar resultado previo: {e}")
             return False
     # -----------------------------------
+
+    # ── Progreso parcial del test ──────────────────────────────────────────────
+
+    def guardar_progreso(self, usuario_id: str, respuestas: list, indice: int) -> bool:
+        """Upsert del progreso en curso (se llama tras cada respuesta válida)."""
+        if not self.client:
+            return False
+        try:
+            self.db["progreso_en_curso"].update_one(
+                {"usuario_id": usuario_id},
+                {"$set": {
+                    "usuario_id": usuario_id,
+                    "respuestas": respuestas,
+                    "indice": indice,
+                    "updated_at": datetime.now(timezone.utc),
+                }},
+                upsert=True,
+            )
+            return True
+        except Exception as e:
+            print(f"[progreso] Error guardando: {e}")
+            return False
+
+    def obtener_progreso(self, usuario_id: str) -> dict | None:
+        """Devuelve el progreso parcial si existe, o None."""
+        if not self.client:
+            return None
+        try:
+            return self.db["progreso_en_curso"].find_one(
+                {"usuario_id": usuario_id},
+                {"_id": 0},
+            )
+        except Exception as e:
+            print(f"[progreso] Error leyendo: {e}")
+            return None
+
+    def limpiar_progreso(self, usuario_id: str) -> bool:
+        """Elimina el registro de progreso parcial (tras completar o reiniciar)."""
+        if not self.client:
+            return False
+        try:
+            self.db["progreso_en_curso"].delete_one({"usuario_id": usuario_id})
+            return True
+        except Exception as e:
+            print(f"[progreso] Error limpiando: {e}")
+            return False
 
     def guardar_resultado(self, usuario_id, resultado_dict):
         if not self.client: 

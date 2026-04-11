@@ -109,6 +109,36 @@ def api_start():
         return jsonify({'success': False, 'error': 'Este usuario ya completó la prueba.'})
     # -------------------------
 
+    # --- REANUDAR PROGRESO EXISTENTE ---
+    progreso = db_client.obtener_progreso(usuario_guardado)
+    if progreso and progreso.get('indice', 0) > 0:
+        sid = str(uuid.uuid4())
+        indice_guardado = progreso['indice']
+        respuestas_guardadas = progreso.get('respuestas', [])
+
+        session['usuario_id'] = usuario_guardado
+        session['rol'] = rol_guardado
+        session['sid'] = sid
+        session['indice_pregunta'] = indice_guardado
+        session['completado'] = False
+        session.modified = True
+
+        _STORE[sid] = {'respuestas': respuestas_guardadas, 'resultado': None}
+
+        pregunta_actual = orientador.obtener_pregunta(indice_guardado)
+        return jsonify({
+            'success': True,
+            'reanudado': True,
+            'message': (
+                f"¡Bienvenido de vuelta! Hemos restaurado tu progreso.\n\n"
+                f"Continuemos desde la **pregunta {indice_guardado + 1}** "
+                f"de {orientador.total_preguntas()}:\n\n**{pregunta_actual}**"
+            ),
+            'total_preguntas': orientador.total_preguntas(),
+            'pregunta_actual': indice_guardado,
+        })
+    # -----------------------------------
+
     session['usuario_id'] = usuario_guardado
     session['rol'] = rol_guardado
 
@@ -124,6 +154,7 @@ def api_start():
         saludo = orientador.obtener_saludo_inicial()
         return jsonify({
             'success': True,
+            'reanudado': False,
             'message': saludo,
             'total_preguntas': orientador.total_preguntas(),
             'pregunta_actual': 0
@@ -189,6 +220,13 @@ def api_answer():
             session['indice_pregunta'] = indice_actual + 1
             session.modified = True
 
+            # Persistir progreso en MongoDB para sobrevivir reinicios
+            db_client.guardar_progreso(
+                session.get('usuario_id'),
+                store['respuestas'],
+                indice_actual + 1,
+            )
+
         nuevo_indice = session['indice_pregunta']
         return jsonify({
             'success': True,
@@ -234,6 +272,7 @@ def api_result():
         store['resultado'] = resultado
         session['completado'] = True
         session.modified = True
+        db_client.limpiar_progreso(usuario_id)  # test completado → eliminar progreso parcial
 
         carrera_top = resultado.get("carrera_recomendada")
         porcentaje_top = resultado.get("porcentaje")
@@ -271,8 +310,11 @@ def logout():
 @app.route('/api/reset', methods=['POST'])
 def api_reset():
     sid = session.get('sid')
+    usuario_id = session.get('usuario_id')
     if sid and sid in _STORE:
         del _STORE[sid]
+    if usuario_id:
+        db_client.limpiar_progreso(usuario_id)
     session.clear()
     return jsonify({'success': True})
 
