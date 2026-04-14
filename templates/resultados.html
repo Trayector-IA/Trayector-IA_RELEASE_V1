@@ -101,7 +101,9 @@
   <div class="result-actions">
     <a href="/orientador" class="btn btn-primary">↺ Nueva evaluación</a>
     <a href="/" class="btn btn-outline">← Inicio</a>
-    <button onclick="window.print()" class="btn btn-ghost"><i data-lucide="printer"></i> Imprimir</button>
+    <a href="/api/download-pdf" class="btn btn-ghost" id="btn-download-pdf">
+      <i data-lucide="download"></i> Descargar en PDF
+    </a>
   </div>
 
   {% endif %}

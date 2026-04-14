@@ -121,33 +121,31 @@ def evaluar_respuesta_usuario(respuesta_usuario: str, indice_actual: int) -> dic
             f"Explica brevemente que ahora explorarán su proyección profesional futura."
         )
 
+    prompt_buena_ultima = (
+        "  → Como es la última pregunta, despídete cálidamente e indícale que "
+        "vas a procesar sus resultados con el sistema de IA.\n"
+    ) if es_ultima else (
+        f"{aviso_bloque}\n"
+        f"  → Formula la siguiente pregunta (pregunta {indice_actual + 2}) "
+        f"en negritas usando dobles asteriscos, así: **{siguiente_pregunta}**\n"
+    )
+
     prompt_sistema = (
         "Eres Trayector-IA, orientador vocacional de la Universidad Veracruzana.\n\n"
         f"El estudiante respondió a la pregunta {indice_actual + 1} de {len(PREGUNTAS)}:\n"
         f"PREGUNTA: \"{pregunta_actual}\"\n"
         f"RESPUESTA: \"{respuesta_usuario}\"\n\n"
-        "Tu tarea:\n"
-        "1. ¿La respuesta es muy corta (menos de 10 palabras), ambigua o no relacionada con la pregunta?\n"
-        "   → Si SÍ (MALA): Genera un mensaje empático pidiendo que profundice más. "
-        "     Vuelve a formular la misma pregunta.\n"
-        "   → Si NO (BUENA): Haz un breve comentario validando su respuesta."
-    )
-
-    if es_ultima:
-        prompt_sistema += (
-            "\n2. Como es la última pregunta, despídete cálidamente e indícale que "
-            "vas a procesar sus resultados con el sistema de IA."
-        )
-    else:
-        prompt_sistema += (
-            f"{aviso_bloque}\n"
-            f"2. Formula la siguiente pregunta (pregunta {indice_actual + 2}). "
-            f"Escríbela SIEMPRE en negritas usando dobles asteriscos, así: "
-            f"**{siguiente_pregunta}**"
-        )
-
-    prompt_sistema += (
-        "\n\nResponde ESTRICTAMENTE en JSON con dos claves:\n"
+        "Evalúa si la respuesta es útil:\n"
+        "- Es MALA si tiene menos de 10 palabras, es ambigua, o no está relacionada con la pregunta.\n"
+        "- Es BUENA si el estudiante responde de forma relevante y con suficiente detalle.\n\n"
+        "Si la respuesta es MALA:\n"
+        "  → Genera un breve mensaje empático pidiendo que elabore más su respuesta.\n"
+        f"  → Vuelve a formular EXACTAMENTE esta misma pregunta en negritas: **{pregunta_actual}**\n"
+        "  → NO menciones ni adelantes ninguna otra pregunta.\n\n"
+        "Si la respuesta es BUENA:\n"
+        "  → Haz un breve comentario validando su respuesta.\n"
+        f"{prompt_buena_ultima}"
+        "\nResponde ESTRICTAMENTE en JSON con dos claves:\n"
         "- \"es_valida\": booleano (true si fue buena, false si fue mala/corta)\n"
         "- \"mensaje\": string (tu respuesta conversacional al estudiante)"
     )

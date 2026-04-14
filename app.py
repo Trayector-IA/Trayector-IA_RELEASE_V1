@@ -1,8 +1,9 @@
 import os
 import uuid
 import json
+from io import BytesIO
 from database import db_client
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from api.orientador import OrientadorAPI
 
 app = Flask(__name__)
@@ -339,6 +340,28 @@ def test_diseno():
     
     # Renderizamos la plantilla saltando el candado
     return render_template('resultados.html', locked=False, resultado=resultado_falso)
+
+
+@app.route('/api/download-pdf', methods=['GET'])
+def api_download_pdf():
+    sid      = session.get('sid')
+    resultado = _STORE.get(sid, {}).get('resultado') if sid else None
+
+    if not resultado:
+        return jsonify({'success': False, 'error': 'No hay resultados disponibles. Completa la entrevista primero.'}), 400
+
+    try:
+        from api.pdf_generator import generate_results_pdf
+        pdf_bytes = generate_results_pdf(resultado)
+        return send_file(
+            BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='reporte-vocacional-trayectoria.pdf',
+        )
+    except Exception as e:
+        app.logger.error(f'[/api/download-pdf] Error: {e}')
+        return jsonify({'success': False, 'error': 'No se pudo generar el PDF. Inténtalo de nuevo.'}), 500
 
 
 if __name__ == '__main__':
