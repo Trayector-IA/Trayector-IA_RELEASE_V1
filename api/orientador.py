@@ -116,7 +116,7 @@ class OrientadorAPI:
             return {"es_valida": True, "mensaje": f"¡Gracias!{aviso}\n\n**{siguiente}**"}
         return {"es_valida": True, "mensaje": "¡Completaste las 10 preguntas! Procesando tu perfil con IA..."}
 
-    def obtener_resultado(self, respuestas):
+    def obtener_resultado(self, respuestas, skip_llm=False):
             # 1. Verificación inicial: ¿El modelo cargó correctamente al iniciar el servidor?
             if not self.nlp_ok:
                 return self._resultado_error("modelo")
@@ -135,13 +135,14 @@ class OrientadorAPI:
                 info = self.info_carrera(carrera)
 
                 # 4. Generación de la explicación (IA vs Fallback)
-                if self.llm_ok:
-                    try: 
-                        explicacion = generar_explicacion_afinidad(respuestas, carrera, pct)
-                    except Exception as e:
-                        print(f"[LLM] Error en explicación dinámica: {e}")
-                        explicacion = self._explicacion_fallback(carrera, pct)
+                if self.llm_ok and not skip_llm: # Añadimos la condición 'not skip_llm'
+                        try: 
+                            explicacion = generar_explicacion_afinidad(respuestas, carrera, pct)
+                        except Exception as e:
+                            print(f"[LLM] Error en explicación dinámica: {e}")
+                            explicacion = self._explicacion_fallback(carrera, pct)
                 else:
+                        # Si skip_llm es True, usamos el fallback rápido sin gastar tokens
                     explicacion = self._explicacion_fallback(carrera, pct)
 
                 # 5. Retorno de éxito

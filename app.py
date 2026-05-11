@@ -71,11 +71,58 @@ def orientador_page():
 
 @app.route('/resultados')
 def resultados():
-    sid = session.get('sid')
-    resultado = _STORE.get(sid, {}).get('resultado') if sid else None
-    if not resultado:
+    # 1. Detectar si el test se acaba de completar (para mostrar el "Gracias")
+    finalizado = request.args.get('finalizado') == 'true'
+    
+    # 2. Intentar obtener código desde la URL (buscador manual)
+    codigo_busqueda = request.args.get('codigo', '').strip()
+    
+    # 3. PRIORIDAD 1: Búsqueda explícita por código (Puerta de entrada manual)
+    if codigo_busqueda:
+        doc_db = db_client.obtener_resultado_por_id(codigo_busqueda)
+        if doc_db and "resultado" in doc_db:
+            res = doc_db["resultado"]
+            
+            # Mapeo de compatibilidad y ocultar porcentajes
+            if "carrera_principal" in res and "carrera_recomendada" not in res:
+                res["carrera_recomendada"] = res["carrera_principal"]
+            res["porcentaje"] = None 
+            source_opciones = res.get("otras_carreras") or res.get("otras_opciones") or []
+            res["otras_opciones"] = [
+                {"Carrera": op.get("Carrera") or op.get("carrera") if isinstance(op, dict) else str(op), "Similitud": None}
+                for op in source_opciones
+            ]
+            res.setdefault("explicacion", "Resultado recuperado de la base de datos.")
+            res.setdefault("total_respuestas", 10)
+
+            return render_template('resultados.html', locked=False, resultado=res)
+        else:
+            return render_template('resultados.html', locked=True, error_busqueda="Código no encontrado.")
+
+    # 4. PRIORIDAD 2: Pantalla de agradecimiento inmediata
+    if finalizado:
+        return render_template('resultados.html', test_finalizado=True)
+
+    # 5. BARRERA DE SEGURIDAD: 
+    # Si el usuario ya completó el test (session['completado'] == True),
+    # NO le mostramos los resultados aunque estén en memoria. Lo mandamos al buscador.
+    if session.get('completado'):
         return render_template('resultados.html', locked=True)
-    return render_template('resultados.html', locked=False, resultado=resultado)
+
+    # 6. Flujo normal (solo para el momento exacto antes de marcar 'completado' o en test)
+    sid = session.get('sid')
+    resultado_sesion = _STORE.get(sid, {}).get('resultado') if sid else None
+    
+    if not resultado_sesion:
+        return render_template('resultados.html', locked=True)
+    
+    # Ocultamos el porcentaje en sesión actual
+    resultado_sesion["porcentaje"] = None
+    if "otras_opciones" in resultado_sesion:
+        for op in resultado_sesion["otras_opciones"]:
+            op["Similitud"] = None
+            
+    return render_template('resultados.html', locked=False, resultado=resultado_sesion)
 
 @app.route('/sobre-nosotros')
 def sobre_nosotros():
@@ -262,30 +309,24 @@ def api_result():
     try:
         resultado = orientador.obtener_resultado(respuestas)
         
-        # --- NUEVA BARRERA DE ERROR ---
-        # Si el orientador detectó un fallo lógico (KNN vacío, modelo caído, etc.)
         if resultado.get("error"):
-            # Devolvemos success=False para que el JS active la alerta roja
             return jsonify({'success': False, 'error': resultado.get("explicacion", "Error en el análisis.")})
-        # ------------------------------
 
-        # Si no hay error, el flujo sigue normal
         store['resultado'] = resultado
         session['completado'] = True
         session.modified = True
-        db_client.limpiar_progreso(usuario_id)  # test completado → eliminar progreso parcial
+        db_client.limpiar_progreso(usuario_id)
 
-        carrera_top = resultado.get("carrera_recomendada")
-        porcentaje_top = resultado.get("porcentaje")
-        otras_opciones = resultado.get("otras_opciones", [])
+        # --- PERSISTENCIA OPTIMIZADA (SIN DUPLICADOS) ---
+        datos_para_mongo = resultado.copy()
         
-        datos_para_mongo = {
-            "carrera_principal": carrera_top,
-            "similitud_principal": porcentaje_top,
-            "otras_carreras": otras_opciones
-        }
-
-        # Solo guardamos en DB si fue un éxito real
+        # Mapeamos a los nombres de llave que prefieras en la BD
+        # Si prefieres 'carrera_principal' y 'otras_carreras':
+        datos_para_mongo["carrera_principal"] = datos_para_mongo.pop("carrera_recomendada", None)
+        datos_para_mongo["similitud_principal"] = datos_para_mongo.pop("porcentaje", None)
+        datos_para_mongo["otras_carreras"] = datos_para_mongo.pop("otras_opciones", [])
+        
+        # Ahora 'datos_para_mongo' tiene todo el texto de la IA pero sin llaves repetidas
         db_client.guardar_resultado(usuario_id, datos_para_mongo)
 
         return jsonify({'success': True, 'resultado': resultado})

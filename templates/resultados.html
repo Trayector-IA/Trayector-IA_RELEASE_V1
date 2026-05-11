@@ -8,15 +8,46 @@
 {% block content %}
 <div class="container results-page">
 
-  {% if locked %}
+  {% if test_finalizado %}
   <div class="results-locked">
-    <div class="lock-icon"><i data-lucide="lock"></i></div>
-    <h2>Resultados no disponibles</h2>
-    <p>Debes completar la entrevista vocacional (10 preguntas) para desbloquear tu resultado personalizado.</p>
-    <a href="/orientador" class="btn btn-primary"><i data-lucide="rocket"></i> Iniciar entrevista</a>
-    <a href="/" class="btn btn-ghost">Volver al inicio</a>
+    <div class="lock-icon" style="color: var(--color-success);"><i data-lucide="check-circle"></i></div>
+    <h2>¡Gracias por participar!</h2>
+    <p>Tus respuestas han sido procesadas correctamente.</p>
+    <div style="background: var(--color-bg-subtle); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid var(--color-border);">
+        <p style="margin: 0; font-weight: 500; color: var(--color-text);">
+            Los resultados serán guardados por sus maestros para su posterior revisión.
+        </p>
+    </div>
+    <div class="result-actions" style="justify-content: center;">
+        <a href="/" class="btn btn-primary">Volver al inicio</a>
+    </div>
   </div>
 
+  {# 2. BUSCADOR POR CÓDIGO (Se muestra si no hay sesión activa) #}
+  {% elif locked %}
+  <div class="results-locked">
+    <div class="lock-icon"><i data-lucide="search"></i></div>
+    <h2>Consulta tu resultado</h2>
+    <p>Introduce el código con el que realizaste tu prueba para ver tu recomendación.</p>
+    
+    {% if error_busqueda %}
+    <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin: 15px auto; max-width: 400px; font-size: 0.9rem;">
+        <i data-lucide="alert-circle" style="width: 16px; height: 16px; vertical-align: text-bottom;"></i> {{ error_busqueda }}
+    </div>
+    {% endif %}
+
+    <form method="GET" action="/resultados" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
+        <input type="text" name="codigo" class="form-control" placeholder="Ej. 009" required style="max-width: 250px; padding: 10px; border-radius: 5px; border: 1px solid var(--color-border);">
+        <button type="submit" class="btn btn-primary"><i data-lucide="search"></i> Buscar</button>
+    </form>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--color-border);">
+        <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 10px;">¿Aún no has hecho la prueba?</p>
+        <a href="/orientador" class="btn btn-outline"><i data-lucide="rocket"></i> Iniciar entrevista</a>
+    </div>
+  </div>
+
+  {# 3. VISTA DE RESULTADOS (Se muestra al buscar código o en admin) #}
   {% else %}
 
   <div class="result-header">
@@ -108,7 +139,4 @@
 
   {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
 {% endblock %}

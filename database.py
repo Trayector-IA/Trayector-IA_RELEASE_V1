@@ -141,5 +141,14 @@ class Database:
         except Exception as e:
             print(f"Error al obtener resultados: {e}")
             return []
+    
+    def obtener_resultado_por_id(self, usuario_id):
+            if not self.client: return None
+            try:
+                # Buscamos el documento que coincida con el ID
+                return self.resultados.find_one({"usuario_id": usuario_id}, {"_id": 0})
+            except Exception as e:
+                print(f"[Error] Buscando resultado {usuario_id}: {e}")
+                return None
 
 db_client = Database()

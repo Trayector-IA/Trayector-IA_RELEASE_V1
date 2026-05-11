@@ -485,9 +485,10 @@
     });
   }
 
-  if (viewResultsBtn) {
+if (viewResultsBtn) {
     viewResultsBtn.addEventListener('click', () => {
-      window.location.href = '/resultados';
+      // Redirigimos con la bandera de "finalizado" para mostrar el agradecimiento
+      window.location.href = '/resultados?finalizado=true';
     });
   }
 
