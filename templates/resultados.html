@@ -6,136 +6,141 @@
 {% endblock %}
 
 {% block content %}
-<div class="container results-page">
+<div class="container results-page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; width: 100%; max-width: 800px; margin: 0 auto; padding: 20px;">
 
+  {# ESTADO 1: AGRADECIMIENTO ALUMNO #}
   {% if test_finalizado %}
-  <div class="results-locked">
-    <div class="lock-icon" style="color: var(--color-success);"><i data-lucide="check-circle"></i></div>
-    <h2>¡Gracias por participar!</h2>
-    <p>Tus respuestas han sido procesadas correctamente.</p>
-    <div style="background: var(--color-bg-subtle); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid var(--color-border);">
-        <p style="margin: 0; font-weight: 500; color: var(--color-text);">
-            Los resultados serán guardados por sus maestros para su posterior revisión.
+  <div class="results-locked" style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+    <div class="lock-icon" style="color: var(--color-success); margin-bottom: 20px;"><i data-lucide="party-popper" style="width: 48px; height: 48px;"></i></div>
+    <h2>¡Entrevista Finalizada!</h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 20px;">Tus respuestas han sido procesadas y guardadas con éxito.</p>
+    
+    <div style="background: rgba(45, 212, 191, 0.1); padding: 25px; border-radius: 12px; margin: 20px 0; border: 1px solid var(--color-primary); max-width: 550px; width: 100%;">
+        <p style="margin: 0; font-weight: 600; color: var(--color-primary); line-height: 1.5;">
+            Los resultados son confidenciales y solo podrán ser consultados por tus maestros para tu seguimiento académico.
         </p>
     </div>
-    <div class="result-actions" style="justify-content: center;">
-        <a href="/" class="btn btn-primary">Volver al inicio</a>
-    </div>
-  </div>
-
-  {# 2. BUSCADOR POR CÓDIGO (Se muestra si no hay sesión activa) #}
-  {% elif locked %}
-  <div class="results-locked">
-    <div class="lock-icon"><i data-lucide="search"></i></div>
-    <h2>Consulta tu resultado</h2>
-    <p>Introduce el código con el que realizaste tu prueba para ver tu recomendación.</p>
     
-    {% if error_busqueda %}
-    <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin: 15px auto; max-width: 400px; font-size: 0.9rem;">
-        <i data-lucide="alert-circle" style="width: 16px; height: 16px; vertical-align: text-bottom;"></i> {{ error_busqueda }}
-    </div>
-    {% endif %}
-
-    <form method="GET" action="/resultados" style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
-        <input type="text" name="codigo" class="form-control" placeholder="Ej. 009" required style="max-width: 250px; padding: 10px; border-radius: 5px; border: 1px solid var(--color-border);">
-        <button type="submit" class="btn btn-primary"><i data-lucide="search"></i> Buscar</button>
-    </form>
-
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--color-border);">
-        <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 10px;">¿Aún no has hecho la prueba?</p>
-        <a href="/orientador" class="btn btn-outline"><i data-lucide="rocket"></i> Iniciar entrevista</a>
+    <div style="margin-top: 20px;">
+        <a href="/" class="btn btn-primary">Volver al Inicio</a>
     </div>
   </div>
 
-  {# 3. VISTA DE RESULTADOS (Se muestra al buscar código o en admin) #}
-  {% else %}
-
-  <div class="result-header">
-    <div class="result-chip"><i data-lucide="check-circle"></i> Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
-    <h1>Tu recomendación vocacional</h1>
-    <p style="color:var(--color-text-muted);font-size:0.95rem;max-width:520px;margin:10px auto 0;">
-      Basado en NLP + TF-IDF + KNN aplicado a tu perfil de ingreso y proyección profesional.
-    </p>
-  </div>
-
-  <div class="affinity-alert high">
-    <span><strong>¡Análisis completado!</strong> Estas son las opciones académicas que mejor se alinean con tu perfil e intereses.</span>
-  </div>
-
-  <div class="main-result-card">
-    <div class="result-content" style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center;">
-      <div class="result-label-sm">Carrera recomendada</div>
-      <div class="career-name">{{ resultado.carrera_recomendada }}</div>
-
-      {% if resultado.es_uv %}
-        <div class="icon-status" style="color: var(--color-success); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">
-            <i data-lucide="check-circle"></i> Disponible en Universidad Veracruzana (Región Orizaba-Córdoba)
-        </div>
-        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:20px;">
-          {% if resultado.facultad %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="building-2"></i> {{ resultado.facultad|truncate(60) }}</span>{% endif %}
-          {% if resultado.municipio %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="map-pin"></i> {{ resultado.municipio|truncate(40) }}</span>{% endif %}
-          {% if resultado.modalidad %}<span class="badge" style="font-size:0.7rem;"><i data-lucide="clipboard-list"></i> {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
-        </div>
-      {% else %}
-        <div style="background: var(--color-bg-subtle); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
-            <span class="icon-inline" style="font-size: 0.85rem; color: var(--color-text-muted);">
-                <i data-lucide="info"></i> Esta carrera no se encuentra actualmente en tu región, pero es la que más se alinea con tu perfil global.
-            </span>
-        </div>
-      {% endif %}
-
-      <div class="result-label-sm" style="margin-bottom:10px;">¿Por qué esta carrera?</div>
-      <div class="result-explanation" style="margin-bottom: 25px;">{{ resultado.explicacion }}</div>
-
-      {% if resultado.url_oficial and resultado.url_oficial != "#" %}
-      <div style="margin-top: 10px; border-top: 1px solid var(--color-border); padding-top: 20px; display: flex; justify-content: center; width: 100%;">
-        <a href="{{ resultado.url_oficial }}" target="_blank" class="btn btn-primary"
-          style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 1rem; border-radius: 8px;">
-           Ver plan de estudios en UV
-        </a>
-      </div>
-      {% endif %}
+  {# ESTADO 2: ACCESO RESTRINGIDO (ALUMNOS O USUARIOS NO LOGUEADOS) #}
+  {% elif acceso_restringido %}
+  <div class="results-locked" style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+    <div class="lock-icon" style="color: #ef4444; margin-bottom: 20px;"><i data-lucide="lock" style="width: 48px; height: 48px;"></i></div>
+    <h2>Acceso Restringido</h2>
+    <p style="color: var(--color-text-muted); max-width: 500px;">Esta sección es exclusiva para personal docente de tu preparatoria.</p>
+    
+    <div style="background: var(--color-bg-subtle); padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid var(--color-border); max-width: 500px; width: 100%;">
+        <p style="margin: 0; font-size: 0.95rem; color: var(--color-text); line-height: 1.5;">
+            Si eres maestro, por favor inicia sesión para consultar los expedientes vocacionales.
+        </p>
+    </div>
+    
+    <div>
+        <a href="/login" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;"><i data-lucide="log-in"></i> Ir al Inicio de Sesión</a>
     </div>
   </div>
 
-  {% if resultado.otras_opciones %}
-  <div class="other-careers-section" style="margin-top:24px; margin-bottom:32px;">
-    <h3 class="icon-section-h3" style="margin-bottom:16px; font-size:1.1rem; color:var(--color-text-muted); text-align: center;"><i data-lucide="bar-chart-2"></i> También podrían interesarte:</h3>
-
-    <div class="other-careers-grid">
-      {% for op in resultado.otras_opciones %}
-      <div class="secondary-result-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px;">
-        <div class="result-label-sm" style="margin-bottom: 6px;">Opción adicional</div>
-        <div class="secondary-career-name" style="margin-bottom: 10px;">{{ op.Carrera }}</div>
+  {# ESTADO 3: PANEL DEL MAESTRO (SOLO SI ROL == ADMIN) #}
+  {% elif acceso_maestro %}
+    <div class="admin-panel-header" style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; margin-bottom: 40px;">
+        <span class="badge" style="background: var(--color-primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Panel Docente</span>
+        <h1 style="margin-top: 15px;">Consulta de Expedientes</h1>
+        <p style="color: var(--color-text-muted); font-size: 0.95rem; max-width: 500px; margin-top: 5px;">Introduce el ID asignado al estudiante para reconstruir su informe vocacional corporativo.</p>
         
-        {% if op.es_uv %}
-          <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;"><i data-lucide="map-pin" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i> Sede UV</span>
-            
-            {% if op.url_oficial and op.url_oficial != "#" %}
-            <a href="{{ op.url_oficial }}" target="_blank" class="btn-link" 
-               style="font-size: 0.75rem; color: var(--color-primary); text-decoration: underline; font-weight: 600;">
-              Ver plan de estudios
+        <form method="GET" action="/resultados" style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 25px; width: 100%; max-width: 450px;">
+            <input type="text" name="codigo" class="form-control" placeholder="Ingrese ID del alumno (ej. 009)" required style="flex-grow: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg);">
+            <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px;"><i data-lucide="search"></i> Consultar</button>
+        </form>
+    </div>
+
+    {% if resultado %}
+      {# VISTA DE RESULTADOS CENTRADA PARA EL MAESTRO #}
+      <div class="result-header" style="text-align: center; width: 100%; margin-bottom: 30px;">
+        <div class="result-chip" style="display: inline-flex; align-items: center; gap: 6px; margin: 0 auto;"><i data-lucide="check-circle"></i> Análisis completado — {{ resultado.total_respuestas }} respuestas procesadas</div>
+        <h1 style="margin-top: 15px;">Recomendación Vocacional Obtenida</h1>
+        <p style="color:var(--color-text-muted);font-size:0.95rem;max-width:520px;margin:10px auto 0;">
+          Análisis basado en NLP + TF-IDF + KNN aplicado al perfil de ingreso de la Universidad Veracruzana.
+        </p>
+      </div>
+
+      <div class="main-result-card" style="width: 100%; background: var(--color-bg-subtle); border: 1px solid var(--color-border); border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow-sm);">
+        <div class="result-content" style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center;">
+          <div class="result-label-sm" style="font-size: 0.85rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 1px; margin-bottom: 5px;">Carrera recomendada</div>
+          <div class="career-name" style="font-size: 2.2rem; font-weight: bold; color: var(--color-primary); margin-bottom: 15px;">{{ resultado.carrera_recomendada }}</div>
+
+          {% if resultado.es_uv %}
+            <div class="icon-status" style="color: var(--color-success); font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="check-circle"></i> Disponible en Universidad Veracruzana (Región Orizaba-Córdoba)
+            </div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:25px; width: 100%;">
+              {% if resultado.facultad %}<span class="badge" style="font-size:0.75rem; padding: 6px 12px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px;"><i class="fa-solid fa-building"></i> {{ resultado.facultad|truncate(60) }}</span>{% endif %}
+              {% if resultado.municipio %}<span class="badge" style="font-size:0.75rem; padding: 6px 12px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px;"><i class="fa-solid fa-map-pin"></i> {{ resultado.municipio|truncate(40) }}</span>{% endif %}
+              {% if resultado.modalidad %}<span class="badge" style="font-size:0.75rem; padding: 6px 12px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px;"><i class="fa-solid fa-graduation-cap"></i> {{ resultado.modalidad|truncate(30) }}</span>{% endif %}
+            </div>
+          {% else %}
+            <div style="background: var(--color-bg-subtle); padding: 12px 20px; border-radius: 8px; margin-bottom: 25px; max-width: 600px;">
+                <span class="icon-inline" style="font-size: 0.9rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="info"></i> Esta carrera no se encuentra actualmente en la región de búsqueda, pero es la que más se alinea con el perfil global del usuario.
+                </span>
+            </div>
+          {% endif %}
+
+          <div class="result-label-sm" style="font-size: 0.85rem; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 1px; margin-bottom:10px;">Argumentación del Sistema</div>
+          <div class="result-explanation" style="margin-bottom: 30px; line-height: 1.6; color: var(--color-text); max-width: 650px; text-align: justify;">{{ resultado.explicacion }}</div>
+
+          {% if resultado.url_oficial and resultado.url_oficial != "#" %}
+          <div style="border-top: 1px solid var(--color-border); padding-top: 20px; display: flex; justify-content: center; width: 100%;">
+            <a href="{{ resultado.url_oficial }}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 0.95rem; border-radius: 8px;">
+               Abrir plan de estudios oficial UV
             </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if resultado.otras_opciones %}
+      <div class="other-careers-section" style="margin-top:10px; margin-bottom:40px; width: 100%;">
+        <h3 class="icon-section-h3" style="margin-bottom:20px; font-size:1.1rem; color:var(--color-text-muted); text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="bar-chart-2"></i> Otras opciones afines detectadas:</h3>
+
+        <div class="other-careers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; width: 100%;">
+          {% for op in resultado.otras_opciones %}
+          <div class="secondary-result-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 12px;">
+            <div class="result-label-sm" style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 6px;">Opción secundaria</div>
+            <div class="secondary-career-name" style="margin-bottom: 15px; font-weight: 600; font-size: 1.05rem; color: var(--color-text);">{{ op.Carrera }}</div>
+            
+            {% if op.es_uv %}
+              <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; margin-top: auto;">
+                <span style="font-size: 0.75rem; color: var(--color-primary); font-weight: 700; display: flex; align-items: center; gap: 4px;"><i data-lucide="map-pin" style="width:12px; height:12px;"></i> Oferta UV</span>
+                {% if op.url_oficial and op.url_oficial != "#" %}
+                <a href="{{ op.url_oficial }}" target="_blank" class="btn-link" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: underline; font-weight: 600;">
+                  Ver mapa curricular
+                </a>
+                {% endif %}
+              </div>
+            {% else %}
+              <span style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: auto;">Opción Externa</span>
             {% endif %}
           </div>
-        {% else %}
-          <span style="font-size: 0.7rem; color: var(--color-text-muted);"> Opción Externa</span>
-        {% endif %}
-
+          {% endfor %}
+        </div>
       </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+      {% endif %}
 
-  <div class="result-actions">
-    <a href="/orientador" class="btn btn-primary">↺ Nueva evaluación</a>
-    <a href="/" class="btn btn-outline">← Inicio</a>
-    <a href="/api/download-pdf" class="btn btn-ghost" id="btn-download-pdf">
-      <i data-lucide="download"></i> Descargar en PDF
-    </a>
-  </div>
+      <div class="result-actions" style="display: flex; gap: 15px; justify-content: center; width: 100%; margin-top: 10px;">
+        <a href="/" class="btn btn-outline">← Panel de Inicio</a>
+        <a href="/api/download-pdf?codigo={{ request.args.get('codigo', '') }}" class="btn btn-ghost" id="btn-download-pdf" style="display: inline-flex; align-items: center; gap: 8px;">
+          <i data-lucide="download"></i> Descargar Expediente (PDF)
+        </a>
+      </div>
+    {% elif error_busqueda %}
+        <div style="background-color: #ffebee; color: #c62828; padding: 12px 24px; border-radius: 8px; margin-top: 20px; text-align: center; width: 100%; max-width: 450px; font-size: 0.95rem; border: 1px solid #ef9a9a;">
+            <i data-lucide="alert-circle" style="width: 18px; height: 18px; vertical-align: text-bottom; margin-right: 5px;"></i> {{ error_busqueda }}
+        </div>
+    {% endif %}
 
   {% endif %}
 </div>

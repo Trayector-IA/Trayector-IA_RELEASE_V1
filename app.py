@@ -24,17 +24,38 @@ def get_store(sid: str) -> dict:
     return _STORE[sid]
 
 @app.route('/admin')
-def admin_dashboard():
-    # Muro de seguridad: validación estricta de sesión
-    if session.get('rol') != 'admin':
-        return redirect(url_for('index'))
-    
-    # Extraemos la información fresca de la base de datos
-    usuarios = db_client.obtener_todos_usuarios()
-    resultados = db_client.obtener_todos_resultados()
-    
-    # Renderizamos la plantilla inyectando los datos
-    return render_template('admin.html', usuarios=usuarios, resultados=resultados)
+def admin_panel():
+    # 1. Filtro de seguridad por rol
+    if session.get('rol') not in ['admin', 'maestro']:
+        return redirect('/login')
+
+    # 2. Llamadas con la nomenclatura exacta de tu clase Database
+    todos_los_alumnos = db_client.obtener_todos_resultados() 
+    todos_los_usuarios = db_client.obtener_todos_usuarios()
+
+    # 3. Clasificación por prefijo de ID para las pestañas
+    grupo_400 = [] 
+    grupo_600 = [] 
+    otros_grupos = []
+
+    for alumno in todos_los_alumnos:
+        uid_str = str(alumno.get("usuario_id", ""))
+        
+        if uid_str.startswith("4"):
+            grupo_400.append(alumno)
+        elif uid_str.startswith("6"):
+            grupo_600.append(alumno)
+        else:
+            otros_grupos.append(alumno)
+
+    # 4. Renderizado con las variables mapeadas para el admin.html con pestañas
+    return render_template(
+        'admin.html', 
+        grupo_400=grupo_400, 
+        grupo_600=grupo_600, 
+        otros_grupos=otros_grupos,
+        usuarios=todos_los_usuarios
+    )
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
@@ -71,58 +92,43 @@ def orientador_page():
 
 @app.route('/resultados')
 def resultados():
-    # 1. Detectar si el test se acaba de completar (para mostrar el "Gracias")
+    # 1. Detectar si el test se acaba de completar (Única vista permitida para alumnos)
     finalizado = request.args.get('finalizado') == 'true'
-    
-    # 2. Intentar obtener código desde la URL (buscador manual)
+    if finalizado:
+        return render_template('resultados.html', test_finalizado=True)
+
+    # 2. BARRERA DE SEGURIDAD: ¿Es maestro?
+    # Si no hay sesión de admin, bloqueamos el acceso y mostramos el aviso de "Solo Maestros"
+    if session.get('rol') not in ['admin', 'maestro']:
+        return render_template('resultados.html', acceso_restringido=True)
+
+    # 3. LÓGICA PARA MAESTROS (Solo accesible si rol == 'admin')
     codigo_busqueda = request.args.get('codigo', '').strip()
-    
-    # 3. PRIORIDAD 1: Búsqueda explícita por código (Puerta de entrada manual)
     if codigo_busqueda:
         doc_db = db_client.obtener_resultado_por_id(codigo_busqueda)
         if doc_db and "resultado" in doc_db:
             res = doc_db["resultado"]
             
-            # Mapeo de compatibilidad y ocultar porcentajes
+            # (Mantenemos tu lógica de mapeo para que el maestro vea todo bien)
             if "carrera_principal" in res and "carrera_recomendada" not in res:
                 res["carrera_recomendada"] = res["carrera_principal"]
+            
+            # El maestro SÍ puede ver los porcentajes si quieres, 
+            # pero mantendremos la consistencia de ocultarlos si prefieres.
             res["porcentaje"] = None 
+
             source_opciones = res.get("otras_carreras") or res.get("otras_opciones") or []
             res["otras_opciones"] = [
                 {"Carrera": op.get("Carrera") or op.get("carrera") if isinstance(op, dict) else str(op), "Similitud": None}
                 for op in source_opciones
             ]
-            res.setdefault("explicacion", "Resultado recuperado de la base de datos.")
-            res.setdefault("total_respuestas", 10)
-
-            return render_template('resultados.html', locked=False, resultado=res)
-        else:
-            return render_template('resultados.html', locked=True, error_busqueda="Código no encontrado.")
-
-    # 4. PRIORIDAD 2: Pantalla de agradecimiento inmediata
-    if finalizado:
-        return render_template('resultados.html', test_finalizado=True)
-
-    # 5. BARRERA DE SEGURIDAD: 
-    # Si el usuario ya completó el test (session['completado'] == True),
-    # NO le mostramos los resultados aunque estén en memoria. Lo mandamos al buscador.
-    if session.get('completado'):
-        return render_template('resultados.html', locked=True)
-
-    # 6. Flujo normal (solo para el momento exacto antes de marcar 'completado' o en test)
-    sid = session.get('sid')
-    resultado_sesion = _STORE.get(sid, {}).get('resultado') if sid else None
-    
-    if not resultado_sesion:
-        return render_template('resultados.html', locked=True)
-    
-    # Ocultamos el porcentaje en sesión actual
-    resultado_sesion["porcentaje"] = None
-    if "otras_opciones" in resultado_sesion:
-        for op in resultado_sesion["otras_opciones"]:
-            op["Similitud"] = None
             
-    return render_template('resultados.html', locked=False, resultado=resultado_sesion)
+            return render_template('resultados.html', acceso_maestro=True, resultado=res)
+        else:
+            return render_template('resultados.html', acceso_maestro=True, error_busqueda="Código no encontrado.")
+
+    # Si es maestro pero no ha buscado nada aún
+    return render_template('resultados.html', acceso_maestro=True)
 
 @app.route('/sobre-nosotros')
 def sobre_nosotros():
@@ -335,11 +341,27 @@ def api_result():
         app.logger.error(f'[/api/result] Error: {e}')
         return jsonify({'success': False, 'error': str(e)}), 500
     
-@app.route('/login')
-def login_page():
-    # Si ya es admin, lo mandamos directo a su panel
-    if session.get('rol') == 'admin':
-        return redirect(url_for('admin_dashboard'))
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario_id = request.form.get('usuario_id', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        valido, mensaje, rol = db_client.verificar_acceso(usuario_id, password)
+        
+        if valido:
+            session['usuario_id'] = usuario_id
+            session['rol'] = rol
+            
+            if rol in ['admin', 'maestro']:
+                return redirect(url_for('admin_panel'))
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error=mensaje)
+            
+    # Esto es lo que se ejecuta si es GET
+    if session.get('rol') in ['admin', 'maestro']:
+        return redirect(url_for('admin_panel'))
     return render_template('login.html')
 
 @app.route('/logout')
@@ -403,6 +425,142 @@ def api_download_pdf():
     except Exception as e:
         app.logger.error(f'[/api/download-pdf] Error: {e}')
         return jsonify({'success': False, 'error': 'No se pudo generar el PDF. Inténtalo de nuevo.'}), 500
+
+@app.route('/api/admin/download-report')
+def admin_download_report():
+    # 1. Validación de seguridad por rol
+    if session.get('rol') not in ['admin', 'maestro']:
+        return jsonify({'success': False, 'error': 'Acceso denegado.'}), 403
+        
+    # 2. Obtener el grupo solicitado desde la URL
+    grupo = request.args.get('grupo', '').strip()
+    todos_los_alumnos = db_client.obtener_todos_resultados()
+    
+    # 3. Filtrar los alumnos pertenecientes únicamente a ese grupo
+    alumnos_filtrados = []
+    for alumno in todos_los_alumnos:
+        uid_str = str(alumno.get("usuario_id", ""))
+        
+        if grupo == "400" and uid_str.startswith("4"):
+            alumnos_filtrados.append(alumno)
+        elif grupo == "600" and uid_str.startswith("6"):
+            alumnos_filtrados.append(alumno)
+        elif grupo == "otros" and not uid_str.startswith("4") and not uid_str.startswith("6"):
+            alumnos_filtrados.append(alumno)
+
+    # 4. COMPILACIÓN Y TRANSMISIÓN DEL PDF REAL
+    from io import BytesIO
+    from flask import send_file
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+
+    # Inicializar el buffer en memoria para no saturar el almacenamiento del servidor
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=letter, 
+        rightMargin=40, 
+        leftMargin=40, 
+        topMargin=40, 
+        bottomMargin=40
+    )
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Estilos tipográficos personalizados para el documento
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        leading=24,
+        textColor=colors.HexColor('#1e293b'),
+        spaceAfter=6
+    )
+    
+    header_style = ParagraphStyle(
+        'HeaderStyle', 
+        parent=styles['Normal'], 
+        fontSize=10, 
+        leading=12, 
+        textColor=colors.white, 
+        fontName='Helvetica-Bold'
+    )
+    
+    cell_style = ParagraphStyle(
+        'CellStyle', 
+        parent=styles['Normal'], 
+        fontSize=9, 
+        leading=13, 
+        textColor=colors.HexColor('#334155')
+    )
+    
+    bold_cell = ParagraphStyle(
+        'BoldCell', 
+        parent=styles['Normal'], 
+        fontSize=9, 
+        leading=13, 
+        fontName='Helvetica-Bold', 
+        textColor=colors.HexColor('#0f172a')
+    )
+    
+    # Estructuración de la cabecera del documento PDF
+    story.append(Paragraph("Trayector-IA — Reporte General de Resultados", title_style))
+    story.append(Paragraph(f"Filtro de exportación: Estudiantes pertenecientes al bloque {grupo}", styles['Normal']))
+    story.append(Spacer(1, 15))
+    
+    # Matriz de datos de la tabla (Fila de encabezado inicial)
+    data_matrix = [[
+        Paragraph("ID Usuario", header_style),
+        Paragraph("Carrera Principal Recomendada", header_style),
+        Paragraph("Otras Opciones Afines Detectadas", header_style)
+    ]]
+    
+    # Población de la matriz mapeando la estructura limpia de las celdas
+    for al in alumnos_filtrados:
+        uid = al.get("usuario_id", "N/A")
+        res_data = al.get("resultado", {})
+        
+        if res_data:
+            carrera_principal = res_data.get("carrera_principal", "N/A")
+            otras_list = res_data.get("otras_carreras", [])
+            otras_texto = ", ".join([op.get("Carrera", str(op)) for op in otras_list]) if otras_list else "Ninguna"
+        else:
+            carrera_principal = "Test no finalizado"
+            otras_texto = "-"
+            
+        data_matrix.append([
+            Paragraph(str(uid), cell_style),
+            Paragraph(carrera_principal, bold_cell),
+            Paragraph(otras_texto, cell_style)
+        ])
+        
+    # Crear la tabla adaptando las proporciones al tamaño Carta (Letter)
+    tabla_reporte = Table(data_matrix, colWidths=[80, 180, 272])
+    tabla_reporte.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2dd4bf')), # Paleta de color identitaria
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')])
+    ]))
+    
+    story.append(tabla_reporte)
+    doc.build(story)
+    
+    # Reposicionar el puntero del buffer para la lectura de descarga
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"Reporte_Grupo_{grupo}.pdf",
+        mimetype='application/pdf'
+    )
 
 
 if __name__ == '__main__':

@@ -40,8 +40,8 @@ async function procesarLogin() {
         const data = await response.json();
 
         if (data.success) {
-            // El enrutador inteligente: decide a dónde enviarte según tu nivel de acceso
-            if (data.rol === 'admin') {
+            // Ahora tanto el admin como el maestro son redirigidos al panel de control
+            if (data.rol === 'admin' || data.rol === 'maestro') {
                 window.location.href = '/admin';
             } else {
                 window.location.href = '/orientador';

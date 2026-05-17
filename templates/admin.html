@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Panel de Administracion - Trayector-IA{% endblock %}
+{% block title %}Panel de Administración - Trayector-IA{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
@@ -9,83 +9,227 @@
 <div class="admin-container">
     <div class="admin-header">
         <h2>Panel de Control</h2>
-        <p>Sesion iniciada como Administrador</p>
+        <p>Sesión iniciada como Personal Autorizado</p>
     </div>
 
-    <h3>Resultados de Entrevistas</h3>
-    <div style="overflow-x: auto;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID Usuario</th>
-                    <th>Carrera Principal</th>
-                    <th>Similitud</th>
-                    <th>Otras Opciones</th>
-                </tr>
-            </thead>
-<tbody>
-                {% for res in resultados %}
-                <tr>
-                    <td>{{ res.usuario_id }}</td>
-                    
-                    {% if res.resultado %}
-                        <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
-                        <td>{{ res.resultado.similitud_principal }}%</td>
-                        <td>
-                            <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
-                            {% for opcion in res.resultado.otras_carreras %}
-                                <li>{{ opcion.Carrera }} ({{ opcion.Similitud }}%)</li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                    {% elif res.top_carreras %}
-                        <td><strong>{{ res.top_carreras[0] }}</strong></td>
-                        <td>N/A</td>
-                        <td>
-                            <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem;">
-                            {% for opcion in res.top_carreras[1:] %}
-                                <li>{{ opcion }}</li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                    {% else %}
-                        <td colspan="3" style="color: #ef4444; opacity: 0.8;">Datos incompletos</td>
-                    {% endif %}
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" style="text-align: center;">No hay resultados registrados todavia.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="openGroupTab(event, 'tab-400')">
+            <i data-lucide="graduation-cap"></i> 4to Semestre
+        </button>
+        <button class="tab-btn" onclick="openGroupTab(event, 'tab-600')">
+            <i data-lucide="graduation-cap"></i> 6to Semestre
+        </button>
+        <button class="tab-btn" onclick="openGroupTab(event, 'tab-otros')">
+            <i data-lucide="user-plus"></i> Otros / Invitados
+        </button>
+        
+        {# CONTROL DE ACCESO: Solo el administrador supremo ve el botón de gestión de cuentas #}
+        {% if session.get('rol') == 'admin' %}
+        <button class="tab-btn" onclick="openGroupTab(event, 'tab-usuarios')" style="margin-left: auto; background: rgba(45, 212, 191, 0.1); border: 1px solid var(--color-primary);">
+            <i data-lucide="users"></i> Usuarios Registrados
+        </button>
+        {% endif %}
     </div>
 
-    <h3>Usuarios Registrados</h3>
-    <div style="overflow-x: auto;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID Usuario</th>
-                    <th>Rol</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usr in usuarios %}
-                <tr>
-                    <td>{{ usr.usuario_id }}</td>
-                    <td>
-                        <span class="badge {% if usr.rol == 'admin' %}admin{% endif %}">
-                            {{ usr.rol | upper }}
-                        </span>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="2" style="text-align: center;">No hay usuarios en la base de datos.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div id="tab-400" class="group-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Resultados: 4to Semestre ({{ grupo_400|length }})</h3>
+            <a href="/api/admin/download-report?grupo=400" class="btn btn-ghost" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.9rem; text-decoration: none; color: var(--color-text);">
+                <i data-lucide="download"></i> Descargar PDF Grupo 400
+            </a>
+        </div>
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Usuario</th>
+                        <th>Carrera Principal</th>
+                        <th>Otras Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in grupo_400 %}
+                    <tr>
+                        <td>{{ res.usuario_id }}</td>
+                        {% if res.resultado %}
+                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
+                                {% for opcion in res.resultado.otras_carreras %}
+                                    <li>{{ opcion.Carrera }}</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        {% else %}
+                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Test no finalizado</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <div id="tab-600" class="group-tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Resultados: 6to Semestre ({{ grupo_600|length }})</h3>
+            <a href="/api/admin/download-report?grupo=600" class="btn btn-ghost" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.9rem; text-decoration: none; color: var(--color-text);">
+                <i data-lucide="download"></i> Descargar PDF Grupo 600
+            </a>
+        </div>
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Usuario</th>
+                        <th>Carrera Principal</th>
+                        <th>Otras Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in grupo_600 %}
+                    <tr>
+                        <td>{{ res.usuario_id }}</td>
+                        {% if res.resultado %}
+                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
+                                {% for opcion in res.resultado.otras_carreras %}
+                                    <li>{{ opcion.Carrera }}</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        {% else %}
+                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Test no finalizado</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tab-otros" class="group-tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Otros / Invitados ({{ otros_grupos|length }})</h3>
+            <a href="/api/admin/download-report?grupo=otros" class="btn btn-ghost" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.9rem; text-decoration: none; color: var(--color-text);">
+                <i data-lucide="download"></i> Descargar PDF Otros
+            </a>
+        </div>
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Usuario</th>
+                        <th>Carrera Principal</th>
+                        <th>Otras Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in otros_grupos %}
+                    <tr>
+                        <td>{{ res.usuario_id }}</td>
+                        {% if res.resultado %}
+                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                            <td>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
+                                {% for opcion in res.resultado.otras_carreras %}
+                                    <li>{{ opcion.Carrera }}</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        {% else %}
+                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Sin datos de análisis</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# CONTROL DE ACCESO INTERNO: El formulario y la lista solo se procesan para administradores #}
+    {% if session.get('rol') == 'admin' %}
+    <div id="tab-usuarios" class="group-tab-content" style="display: none;">
+        
+        <div style="background: rgba(0, 0, 0, 0.02); border: 1px solid var(--color-border); padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+            <h4 style="margin-top: 0; margin-bottom: 5px; color: var(--color-text);">Registrar Nuevo Personal Docente</h4>
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 20px;">Las cuentas creadas desde este panel tendrán privilegios exclusivos de lectura sobre las estadísticas de los grupos escolares.</p>
+            
+            <form action="/admin/agregar-maestro" method="POST" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: #64748b;">ID del Maestro</label>
+                    <input type="text" name="usuario_id" required placeholder="Ej. maestro_uv_01" style="padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-bg); min-width: 200px; color: var(--color-text);">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Contraseña Temporal</label>
+                    <input type="password" name="password" required placeholder="••••••••" style="padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-bg); min-width: 200px; color: var(--color-text);">
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 11px 24px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; border: none; cursor: pointer;">
+                    <i data-lucide="user-plus"></i> Guardar Cuenta
+                </button>
+            </form>
+        </div>
+
+        <h3 style="margin-bottom: 15px;">Gestión de Cuentas (Total: {{ usuarios|length }})</h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado de Seguridad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usr in usuarios %}
+                    <tr>
+                        <td>{{ usr.usuario_id }}</td>
+                        <td>
+                            <span class="badge {% if usr.rol == 'admin' %}admin{% endif %}" style="padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                {{ usr.rol | upper }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.85rem; color: #10b981;">
+                                <i data-lucide="shield-check" style="width:14px; height:14px; vertical-align: middle;"></i> Cifrado Bcrypt activo
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openGroupTab(evt, tabId) {
+    // 1. Ocultar todos
+    const tabContents = document.querySelectorAll('.group-tab-content');
+    tabContents.forEach(content => content.style.display = 'none');
+
+    // 2. Desactivar botones
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if(!btn.style.border) {
+            btn.style.background = 'rgba(0, 0, 0, 0.05)';
+            btn.style.color = 'var(--color-text)';
+        }
+    });
+
+    // 3. Mostrar el seleccionado
+    const selectedTab = document.getElementById(tabId);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
+    
+    // 4. Marcar botón activo
+    evt.currentTarget.classList.add('active');
+}
+</script>
 {% endblock %}

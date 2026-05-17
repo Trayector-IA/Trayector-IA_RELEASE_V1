@@ -46,3 +46,56 @@
 .badge.admin { 
     background-color: #ef4444; /* Rojo para administradores */
 }
+/* ==========================================
+   SISTEMA DE PESTAÑAS (TABS) - PANEL ADMIN
+   ========================================== */
+.tabs-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-border, #e2e8f0);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-text, #1e293b);
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn.active {
+    background: var(--color-primary, #2dd4bf);
+    color: white;
+}
+
+.tab-btn i, 
+.tab-btn [data-lucide] { 
+    width: 16px; 
+    height: 16px; 
+}
+
+/* Animación de transición suave al cambiar de pestaña */
+.group-tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(2px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}

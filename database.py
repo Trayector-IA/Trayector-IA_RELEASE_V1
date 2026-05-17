@@ -32,7 +32,7 @@ class Database:
             
             rol = usuario.get("rol", "estudiante")
             
-            if rol == "admin":
+            if rol in ["admin", "maestro"]:
                 hash_guardado = usuario.get("password", "")
                 
                 if not password_plano:
