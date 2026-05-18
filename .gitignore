@@ -3,6 +3,7 @@
 /venv
 venv/
 __pycache__
+nltk_data/
 
 api/__pycache__
 

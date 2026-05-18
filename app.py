@@ -2,7 +2,7 @@ import os
 import uuid
 import json
 from io import BytesIO
-from database import db_client
+from database_cloud import db_cloud
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from api.orientador import OrientadorAPI
 
@@ -23,62 +23,91 @@ def get_store(sid: str) -> dict:
         _STORE[sid] = {'respuestas': [], 'resultado': None}
     return _STORE[sid]
 
+
+def _clasificar_semestre(uid_str: str):
+    """
+    Busca el primer segmento todo-numérico (separado por '_') que empiece
+    con '4' o '6' para determinar semestre y bachillerato.
+    Ej: 'cpo_est_601' → ('600', '1')
+        'alumno_401'  → ('400', '1')
+        '600'         → ('600', '0')
+    Devuelve (None, None) si no hay coincidencia.
+    """
+    for parte in uid_str.split("_"):
+        if parte.isdigit():
+            sufijo = parte[1:]
+            bach = str(int(sufijo)) if sufijo else "0"
+            if parte[0] == "4":
+                return "400", bach
+            elif parte[0] == "6":
+                return "600", bach
+    return None, None
+
 @app.route('/admin')
 def admin_panel():
     # 1. Filtro de seguridad por rol
     if session.get('rol') not in ['admin', 'maestro']:
         return redirect('/login')
 
-    # 2. Llamadas con la nomenclatura exacta de tu clase Database
-    todos_los_alumnos = db_client.obtener_todos_resultados() 
-    todos_los_usuarios = db_client.obtener_todos_usuarios()
+    scope        = session.get('cloud_scope', 'global')
+    preparatoria = session.get('cloud_preparatoria')
+    todos_los_alumnos  = db_cloud.obtener_resultados_filtrados(scope, preparatoria)
+    todos_los_usuarios = db_cloud.obtener_usuarios_filtrados(scope, preparatoria)
 
-    # 3. Clasificación por prefijo de ID para las pestañas
-    grupo_400 = [] 
-    grupo_600 = [] 
+    # 3. Clasificación por semestre y bachillerato
+    bachilleratos_400 = {}
+    bachilleratos_600 = {}
     otros_grupos = []
 
     for alumno in todos_los_alumnos:
         uid_str = str(alumno.get("usuario_id", ""))
-        
-        if uid_str.startswith("4"):
-            grupo_400.append(alumno)
-        elif uid_str.startswith("6"):
-            grupo_600.append(alumno)
+        semestre, bach = _clasificar_semestre(uid_str)
+        if semestre == "400":
+            bachilleratos_400.setdefault(bach, []).append(alumno)
+        elif semestre == "600":
+            bachilleratos_600.setdefault(bach, []).append(alumno)
         else:
             otros_grupos.append(alumno)
 
+    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+
     # 4. Renderizado con las variables mapeadas para el admin.html con pestañas
     return render_template(
-        'admin.html', 
-        grupo_400=grupo_400, 
-        grupo_600=grupo_600, 
+        'admin.html',
+        bachilleratos_400=bachilleratos_400,
+        bachilleratos_600=bachilleratos_600,
+        total_400=sum(len(v) for v in bachilleratos_400.values()),
+        total_600=sum(len(v) for v in bachilleratos_600.values()),
         otros_grupos=otros_grupos,
         usuarios=todos_los_usuarios
     )
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    data = request.get_json()
+    data       = request.get_json()
     usuario_id = data.get('usuario_id', '').strip()
-    password = data.get('password', '').strip() # Opcional, solo para admin
+    password   = data.get('password',   '').strip()
 
     if not usuario_id:
         return jsonify({'success': False, 'error': 'ID no proporcionado.'}), 400
 
-    es_valido, mensaje, rol = db_client.verificar_acceso(usuario_id, password)
-    
-    if es_valido:
-        session['usuario_id'] = usuario_id
-        session['rol'] = rol
+    ok, mensaje, rol, meta = db_cloud.verificar_acceso(usuario_id, password)
+    if ok:
+        session['usuario_id']         = usuario_id
+        session['rol']                = rol
+        session['cloud_session_id']   = meta.get('session_id')
+        session['cloud_scope']        = meta.get('scope', 'local')
+        session['cloud_preparatoria'] = meta.get('preparatoria')
         session.modified = True
         return jsonify({
-            'success': True, 
+            'success': True,
             'message': mensaje,
-            'rol': rol
+            'rol':     rol,
+            'cloud':   bool(meta.get('session_id')),
         })
-    else:
-        return jsonify({'success': False, 'error': mensaje}), 403
+
+    return jsonify({'success': False, 'error': mensaje}), 403
 
 # ─── PAGE ROUTES ──────────────────────────────────────────────────────────────
 
@@ -105,7 +134,7 @@ def resultados():
     # 3. LÓGICA PARA MAESTROS (Solo accesible si rol == 'admin')
     codigo_busqueda = request.args.get('codigo', '').strip()
     if codigo_busqueda:
-        doc_db = db_client.obtener_resultado_por_id(codigo_busqueda)
+        doc_db = db_cloud.obtener_resultado_por_id(codigo_busqueda)
         if doc_db and "resultado" in doc_db:
             res = doc_db["resultado"]
             
@@ -150,21 +179,21 @@ def api_start():
         if not usuario_modal:
             return jsonify({'success': False, 'error': 'El ID es obligatorio.'})
         
-        acceso_permitido, mensaje, rol = db_client.verificar_acceso(usuario_modal)
+        acceso_permitido, mensaje, rol, _ = db_cloud.verificar_acceso(usuario_modal)
         if not acceso_permitido:
             return jsonify({'success': False, 'error': mensaje})
-        
+
         usuario_guardado = usuario_modal
         rol_guardado = rol
 
     # --- BARRERA DE ESTADO ---
-    if rol_guardado != 'admin' and db_client.ya_realizo_prueba(usuario_guardado):
+    if rol_guardado != 'admin' and db_cloud.ya_realizo_prueba(usuario_guardado):
         session.clear()
         return jsonify({'success': False, 'error': 'Este usuario ya completó la prueba.'})
     # -------------------------
 
     # --- REANUDAR PROGRESO EXISTENTE ---
-    progreso = db_client.obtener_progreso(usuario_guardado)
+    progreso = db_cloud.obtener_progreso(usuario_guardado)
     if progreso and progreso.get('indice', 0) > 0:
         sid = str(uuid.uuid4())
         indice_guardado = progreso['indice']
@@ -275,7 +304,7 @@ def api_answer():
             session.modified = True
 
             # Persistir progreso en MongoDB para sobrevivir reinicios
-            db_client.guardar_progreso(
+            db_cloud.guardar_progreso(
                 session.get('usuario_id'),
                 store['respuestas'],
                 indice_actual + 1,
@@ -307,10 +336,16 @@ def api_result():
     respuestas = store.get('respuestas', [])
 
     if len(respuestas) < orientador.total_preguntas():
-        return jsonify({
-            'success': False,
-            'error': f'Faltan respuestas ({len(respuestas)}/{orientador.total_preguntas()}).'
-        }), 400
+        # _STORE is in-memory; recover from MongoDB if the server restarted
+        progreso = db_cloud.obtener_progreso(usuario_id)
+        if progreso and len(progreso.get('respuestas', [])) >= orientador.total_preguntas():
+            respuestas = progreso['respuestas']
+            store['respuestas'] = respuestas
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Faltan respuestas ({len(respuestas)}/{orientador.total_preguntas()}).'
+            }), 400
 
     try:
         resultado = orientador.obtener_resultado(respuestas)
@@ -321,38 +356,56 @@ def api_result():
         store['resultado'] = resultado
         session['completado'] = True
         session.modified = True
-        db_client.limpiar_progreso(usuario_id)
+        db_cloud.limpiar_progreso(usuario_id)
 
-        # --- PERSISTENCIA OPTIMIZADA (SIN DUPLICADOS) ---
         datos_para_mongo = resultado.copy()
-        
-        # Mapeamos a los nombres de llave que prefieras en la BD
-        # Si prefieres 'carrera_principal' y 'otras_carreras':
-        datos_para_mongo["carrera_principal"] = datos_para_mongo.pop("carrera_recomendada", None)
+        datos_para_mongo["carrera_principal"]   = datos_para_mongo.pop("carrera_recomendada", None)
         datos_para_mongo["similitud_principal"] = datos_para_mongo.pop("porcentaje", None)
-        datos_para_mongo["otras_carreras"] = datos_para_mongo.pop("otras_opciones", [])
-        
-        # Ahora 'datos_para_mongo' tiene todo el texto de la IA pero sin llaves repetidas
-        db_client.guardar_resultado(usuario_id, datos_para_mongo)
+        datos_para_mongo["otras_carreras"]      = datos_para_mongo.pop("otras_opciones", [])
+        db_cloud.guardar_resultado(usuario_id, datos_para_mongo, respuestas=respuestas)
 
         return jsonify({'success': True, 'resultado': resultado})
             
     except Exception as e:
         app.logger.error(f'[/api/result] Error: {e}')
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
+
+@app.route('/api/admin/respuestas/<usuario_id>')
+def api_admin_respuestas(usuario_id):
+    if session.get('rol') not in ['admin', 'maestro']:
+        return jsonify({'success': False, 'error': 'Sin permisos.'}), 403
+    doc = db_cloud.obtener_resultado_por_id(usuario_id)
+    if not doc:
+        return jsonify({'success': False, 'error': 'No se encontraron datos para este usuario.'}), 404
+    preguntas = orientador.preguntas
+    respuestas = doc.get('respuestas', [])
+    pares = [
+        {
+            'numero': i + 1,
+            'pregunta': preguntas[i] if i < len(preguntas) else f'Pregunta {i+1}',
+            'respuesta': respuestas[i] if i < len(respuestas) else None,
+        }
+        for i in range(len(preguntas))
+    ]
+    return jsonify({'success': True, 'usuario_id': usuario_id, 'pares': pares})
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         usuario_id = request.form.get('usuario_id', '').strip()
-        password = request.form.get('password', '').strip()
-        
-        valido, mensaje, rol = db_client.verificar_acceso(usuario_id, password)
-        
+        password   = request.form.get('password',   '').strip()
+
+        valido, mensaje, rol, meta = db_cloud.verificar_acceso(usuario_id, password)
+
         if valido:
-            session['usuario_id'] = usuario_id
-            session['rol'] = rol
-            
+            session['usuario_id']         = usuario_id
+            session['rol']                = rol
+            session['cloud_session_id']   = meta.get('session_id')
+            session['cloud_scope']        = meta.get('scope', 'local')
+            session['cloud_preparatoria'] = meta.get('preparatoria')
+            session.modified = True
             if rol in ['admin', 'maestro']:
                 return redirect(url_for('admin_panel'))
             return redirect(url_for('index'))
@@ -378,7 +431,7 @@ def api_reset():
     if sid and sid in _STORE:
         del _STORE[sid]
     if usuario_id:
-        db_client.limpiar_progreso(usuario_id)
+        db_cloud.limpiar_progreso(usuario_id)
     session.clear()
     return jsonify({'success': True})
 
@@ -433,19 +486,22 @@ def admin_download_report():
         return jsonify({'success': False, 'error': 'Acceso denegado.'}), 403
         
     # 2. Obtener el grupo solicitado desde la URL
-    grupo = request.args.get('grupo', '').strip()
-    todos_los_alumnos = db_client.obtener_todos_resultados()
+    grupo        = request.args.get('grupo', '').strip()
+    scope        = session.get('cloud_scope', 'global')
+    preparatoria = session.get('cloud_preparatoria')
+    todos_los_alumnos = db_cloud.obtener_resultados_filtrados(scope, preparatoria)
     
     # 3. Filtrar los alumnos pertenecientes únicamente a ese grupo
     alumnos_filtrados = []
     for alumno in todos_los_alumnos:
         uid_str = str(alumno.get("usuario_id", ""))
         
-        if grupo == "400" and uid_str.startswith("4"):
+        semestre, _ = _clasificar_semestre(uid_str)
+        if grupo == "400" and semestre == "400":
             alumnos_filtrados.append(alumno)
-        elif grupo == "600" and uid_str.startswith("6"):
+        elif grupo == "600" and semestre == "600":
             alumnos_filtrados.append(alumno)
-        elif grupo == "otros" and not uid_str.startswith("4") and not uid_str.startswith("6"):
+        elif grupo == "otros" and semestre is None:
             alumnos_filtrados.append(alumno)
 
     # 4. COMPILACIÓN Y TRANSMISIÓN DEL PDF REAL
@@ -560,6 +616,168 @@ def admin_download_report():
         as_attachment=True,
         download_name=f"Reporte_Grupo_{grupo}.pdf",
         mimetype='application/pdf'
+    )
+
+
+# ── Eliminación de registros ──────────────────────────────────────────────────
+
+@app.route('/api/admin/eliminar-resultado/<usuario_id>', methods=['DELETE'])
+def eliminar_resultado(usuario_id):
+    if session.get('rol') not in ['admin', 'maestro']:
+        return jsonify({'success': False, 'error': 'Sin permisos.'}), 403
+
+    scope = session.get('cloud_scope', 'global')
+    prepa = session.get('cloud_preparatoria')
+    ok = db_cloud.eliminar_resultado(usuario_id, scope, prepa)
+
+    if ok:
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Registro no encontrado o sin permisos.'}), 404
+
+
+@app.route('/api/admin/eliminar-usuario/<usuario_id>', methods=['DELETE'])
+def eliminar_usuario(usuario_id):
+    if session.get('rol') != 'admin':
+        return jsonify({'success': False, 'error': 'Solo el administrador puede eliminar usuarios.'}), 403
+
+    # Evitar auto-eliminación
+    if usuario_id == session.get('usuario_id'):
+        return jsonify({'success': False, 'error': 'No puedes eliminar tu propia cuenta.'}), 400
+
+    scope = session.get('cloud_scope', 'global')
+    prepa = session.get('cloud_preparatoria')
+    ok = db_cloud.eliminar_usuario(usuario_id, scope, prepa)
+
+    if ok:
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Usuario no encontrado o sin permisos.'}), 404
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RUTAS CLOUD  –  agente_vocacional_cloud
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/cloud/login', methods=['POST'])
+def api_cloud_login():
+    """Login para admins cloud con control de sesiones y scope de preparatoria."""
+    data       = request.get_json()
+    usuario_id = data.get('usuario_id', '').strip()
+    password   = data.get('password',   '').strip()
+
+    if not usuario_id:
+        return jsonify({'success': False, 'error': 'ID no proporcionado.'}), 400
+
+    ok, mensaje, rol, meta = db_cloud.verificar_acceso(usuario_id, password)
+
+    if ok:
+        session['usuario_id']        = usuario_id
+        session['rol']               = rol
+        session['cloud_session_id']  = meta.get('session_id')
+        session['cloud_scope']       = meta.get('scope', 'local')
+        session['cloud_preparatoria']= meta.get('preparatoria')
+        session.modified = True
+        return jsonify({
+            'success': True,
+            'message': mensaje,
+            'rol':     rol,
+            'scope':   meta.get('scope'),
+        })
+
+    return jsonify({'success': False, 'error': mensaje}), 403
+
+
+@app.route('/api/cloud/logout', methods=['POST'])
+def api_cloud_logout():
+    """Cierra la sesión cloud y la marca como inactiva en MongoDB."""
+    cloud_sid = session.pop('cloud_session_id', None)
+    session.pop('cloud_scope',        None)
+    session.pop('cloud_preparatoria', None)
+    session.pop('usuario_id',         None)
+    session.pop('rol',                None)
+    session.modified = True
+
+    if cloud_sid:
+        db_cloud.cerrar_sesion(cloud_sid)
+
+    return jsonify({'success': True, 'message': 'Sesión cerrada.'})
+
+
+@app.route('/api/cloud/registrar-estudiante', methods=['POST'])
+def api_cloud_registrar_estudiante():
+    """Registra uno o varios estudiantes en una preparatoria (solo admins cloud)."""
+    if session.get('rol') not in ['admin', 'maestro']:
+        return jsonify({'success': False, 'error': 'Sin permisos.'}), 403
+
+    data        = request.get_json()
+    preparatoria= data.get('preparatoria', '').strip().lower()
+    cantidad    = int(data.get('cantidad', 1))
+    scope       = session.get('cloud_scope', 'local')
+    prepa_admin = session.get('cloud_preparatoria')
+
+    # Admin local solo puede registrar en su propia preparatoria
+    if scope == 'local' and preparatoria != prepa_admin:
+        return jsonify({'success': False, 'error': 'Solo puedes registrar estudiantes de tu preparatoria.'}), 403
+
+    if not preparatoria:
+        return jsonify({'success': False, 'error': 'Preparatoria no especificada.'}), 400
+
+    inicio  = db_cloud.obtener_siguiente_numero_estudiante(preparatoria)
+    creados = db_cloud.registrar_estudiantes_lote(preparatoria, cantidad, inicio)
+
+    return jsonify({
+        'success': True,
+        'creados': len(creados),
+        'estudiantes': creados,
+    })
+
+
+@app.route('/admin/cloud')
+def admin_cloud_panel():
+    """Panel de administración cloud filtrado por preparatoria o global."""
+    if session.get('rol') not in ['admin', 'maestro']:
+        return redirect('/login')
+
+    scope       = session.get('cloud_scope',        'local')
+    preparatoria= session.get('cloud_preparatoria')
+
+    todos_los_resultados = db_cloud.obtener_resultados_filtrados(scope, preparatoria)
+    todos_los_usuarios   = db_cloud.obtener_usuarios_filtrados(scope, preparatoria)
+    preparatorias_lista  = db_cloud.obtener_preparatorias()
+
+    # Clasificar resultados por semestre y bachillerato
+    bachilleratos_400 = {}
+    bachilleratos_600 = {}
+    otros_grupos = []
+
+    for alumno in todos_los_resultados:
+        campo_semestre = alumno.get("semestre")
+        uid_str = str(alumno.get("usuario_id", ""))
+        semestre, bach = _clasificar_semestre(uid_str)
+        if campo_semestre == "4":
+            semestre = "400"
+        elif campo_semestre == "6":
+            semestre = "600"
+        if semestre == "400":
+            bachilleratos_400.setdefault(bach or "0", []).append(alumno)
+        elif semestre == "600":
+            bachilleratos_600.setdefault(bach or "0", []).append(alumno)
+        else:
+            otros_grupos.append(alumno)
+
+    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+
+    return render_template(
+        'admin.html',
+        bachilleratos_400=bachilleratos_400,
+        bachilleratos_600=bachilleratos_600,
+        total_400=sum(len(v) for v in bachilleratos_400.values()),
+        total_600=sum(len(v) for v in bachilleratos_600.values()),
+        otros_grupos=otros_grupos,
+        usuarios=todos_los_usuarios,
+        scope=scope,
+        preparatoria_activa=preparatoria,
+        preparatorias=preparatorias_lista,
     )
 
 

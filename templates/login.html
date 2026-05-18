@@ -40,8 +40,9 @@ async function procesarLogin() {
         const data = await response.json();
 
         if (data.success) {
-            // Ahora tanto el admin como el maestro son redirigidos al panel de control
-            if (data.rol === 'admin' || data.rol === 'maestro') {
+            if (data.cloud && (data.rol === 'admin' || data.rol === 'maestro')) {
+                window.location.href = '/admin/cloud';
+            } else if (data.rol === 'admin' || data.rol === 'maestro') {
                 window.location.href = '/admin';
             } else {
                 window.location.href = '/orientador';

@@ -143,12 +143,29 @@ class Database:
             return []
     
     def obtener_resultado_por_id(self, usuario_id):
-            if not self.client: return None
-            try:
-                # Buscamos el documento que coincida con el ID
-                return self.resultados.find_one({"usuario_id": usuario_id}, {"_id": 0})
-            except Exception as e:
-                print(f"[Error] Buscando resultado {usuario_id}: {e}")
-                return None
+        if not self.client: return None
+        try:
+            return self.resultados.find_one({"usuario_id": usuario_id}, {"_id": 0})
+        except Exception as e:
+            print(f"[Error] Buscando resultado {usuario_id}: {e}")
+            return None
+
+    def eliminar_resultado(self, usuario_id: str) -> bool:
+        if not self.client: return False
+        try:
+            res = self.resultados.delete_one({"usuario_id": usuario_id})
+            return res.deleted_count > 0
+        except Exception as e:
+            print(f"[Error] Eliminando resultado {usuario_id}: {e}")
+            return False
+
+    def eliminar_usuario(self, usuario_id: str) -> bool:
+        if not self.client: return False
+        try:
+            res = self.usuarios.delete_one({"usuario_id": usuario_id})
+            return res.deleted_count > 0
+        except Exception as e:
+            print(f"[Error] Eliminando usuario {usuario_id}: {e}")
+            return False
 
 db_client = Database()

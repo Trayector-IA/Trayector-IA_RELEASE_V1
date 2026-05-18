@@ -1,4 +1,5 @@
 import csv
+import os
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -7,12 +8,18 @@ from nltk.stem.snowball import SnowballStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import KNeighborsClassifier
 
-# Descargas necesarias de NLTK
-# Descargas necesarias de NLTK (Actualizado para la nube)
+# Use a project-local directory to avoid NLTK's path-security block on
+# Windows Store Python, whose LocalCache path is flagged as unauthorized.
+_NLTK_DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nltk_data'
+)
+os.makedirs(_NLTK_DATA_DIR, exist_ok=True)
+nltk.data.path.insert(0, _NLTK_DATA_DIR)
+
 try:
-    nltk.download('punkt_tab', quiet=True) 
-    nltk.download('punkt', quiet=True)
-    nltk.download('stopwords', quiet=True)
+    nltk.download('punkt_tab',  quiet=True, download_dir=_NLTK_DATA_DIR)
+    nltk.download('punkt',      quiet=True, download_dir=_NLTK_DATA_DIR)
+    nltk.download('stopwords',  quiet=True, download_dir=_NLTK_DATA_DIR)
 except Exception as e:
     print(f"[NLTK] Advertencia al descargar recursos: {e}")
 
