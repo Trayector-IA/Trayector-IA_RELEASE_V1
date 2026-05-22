@@ -308,6 +308,44 @@ class DatabaseCloud:
             print(f"[cloud] Error eliminando resultado {usuario_id}: {e}")
             return False
 
+    def obtener_estudiantes_con_estado(self, scope: str = "local", preparatoria: str | None = None) -> list:
+        """Devuelve todos los estudiantes registrados combinados con su resultado (o sin_contestar=True)."""
+        if not self.client:
+            return []
+        try:
+            if scope == "global":
+                estudiantes = list(self.usuarios.find(
+                    {"rol": "estudiante"}, {"_id": 0, "password": 0}
+                ))
+            else:
+                estudiantes = list(self.usuarios.find(
+                    {"preparatoria": preparatoria, "rol": "estudiante"},
+                    {"_id": 0, "password": 0}
+                ))
+
+            ids = [e["usuario_id"] for e in estudiantes]
+            resultados_list = list(self.resultados.find(
+                {"usuario_id": {"$in": ids}}, {"_id": 0}
+            ))
+            resultados_map = {r["usuario_id"]: r for r in resultados_list}
+
+            combined = []
+            for est in estudiantes:
+                uid = est["usuario_id"]
+                result_doc = resultados_map.get(uid)
+                combined.append({
+                    "usuario_id":   uid,
+                    "preparatoria": est.get("preparatoria"),
+                    "grupo":        est.get("grupo"),
+                    "resultado":    result_doc.get("resultado") if result_doc else None,
+                    "respuestas":   result_doc.get("respuestas") if result_doc else None,
+                })
+
+            return sorted(combined, key=lambda x: x["usuario_id"])
+        except Exception as e:
+            print(f"[cloud] Error en obtener_estudiantes_con_estado: {e}")
+            return []
+
     def obtener_todos_resultados(self) -> list:
         """Devuelve todos los resultados sin filtro (equivalente global)."""
         return self.obtener_resultados_filtrados("global")

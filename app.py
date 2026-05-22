@@ -26,14 +26,30 @@ def get_store(sid: str) -> dict:
 
 def _clasificar_semestre(uid_str: str):
     """
-    Busca el primer segmento todo-numérico (separado por '_') que empiece
-    con '4' o '6' para determinar semestre y bachillerato.
-    Ej: 'cpo_est_601' → ('600', '1')
-        'alumno_401'  → ('400', '1')
-        '600'         → ('600', '0')
-    Devuelve (None, None) si no hay coincidencia.
+    Devuelve (semestre, clasificacion) donde:
+    - semestre:       "400", "600" o None
+    - clasificacion:  letra de grupo ("A"-"E") para formato nuevo,
+                      o número de bachillerato para formato legacy.
+
+    Formato nuevo:  cpo_a_401  → ("400", "A")
+                    cpo_e_460  → ("400", "E")
+    Formato legacy: alumno_401 → ("400", "1")
     """
-    for parte in uid_str.split("_"):
+    partes = uid_str.split("_")
+
+    # Formato {prepa}_{letra_grupo}_{numero}: cpo_a_401
+    if len(partes) >= 3:
+        letra = partes[1].lower()
+        if letra in ('a', 'b', 'c', 'd', 'e'):
+            for p in partes[2:]:
+                if p.isdigit():
+                    if p[0] == "4":
+                        return "400", letra.upper()
+                    elif p[0] == "6":
+                        return "600", letra.upper()
+
+    # Fallback: primer segmento numérico que empieza con 4 o 6
+    for parte in partes:
         if parte.isdigit():
             sufijo = parte[1:]
             bach = str(int(sufijo)) if sufijo else "0"
@@ -43,36 +59,43 @@ def _clasificar_semestre(uid_str: str):
                 return "600", bach
     return None, None
 
+
+def _sort_clasificacion(k):
+    """Ordena claves de grupo: letras (A-E) antes que números."""
+    if isinstance(k, str) and k.isalpha():
+        return (0, k)
+    try:
+        return (1, int(k))
+    except (ValueError, TypeError):
+        return (2, str(k))
+
 @app.route('/admin')
 def admin_panel():
-    # 1. Filtro de seguridad por rol
     if session.get('rol') not in ['admin', 'maestro']:
         return redirect('/login')
 
     scope        = session.get('cloud_scope', 'global')
     preparatoria = session.get('cloud_preparatoria')
-    todos_los_alumnos  = db_cloud.obtener_resultados_filtrados(scope, preparatoria)
+    todos_los_alumnos  = db_cloud.obtener_estudiantes_con_estado(scope, preparatoria)
     todos_los_usuarios = db_cloud.obtener_usuarios_filtrados(scope, preparatoria)
 
-    # 3. Clasificación por semestre y bachillerato
     bachilleratos_400 = {}
     bachilleratos_600 = {}
     otros_grupos = []
 
     for alumno in todos_los_alumnos:
         uid_str = str(alumno.get("usuario_id", ""))
-        semestre, bach = _clasificar_semestre(uid_str)
+        semestre, clasificacion = _clasificar_semestre(uid_str)
         if semestre == "400":
-            bachilleratos_400.setdefault(bach, []).append(alumno)
+            bachilleratos_400.setdefault(clasificacion or "0", []).append(alumno)
         elif semestre == "600":
-            bachilleratos_600.setdefault(bach, []).append(alumno)
+            bachilleratos_600.setdefault(clasificacion or "0", []).append(alumno)
         else:
             otros_grupos.append(alumno)
 
-    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
-    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: _sort_clasificacion(x[0])))
+    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: _sort_clasificacion(x[0])))
 
-    # 4. Renderizado con las variables mapeadas para el admin.html con pestañas
     return render_template(
         'admin.html',
         bachilleratos_400=bachilleratos_400,
@@ -80,7 +103,8 @@ def admin_panel():
         total_400=sum(len(v) for v in bachilleratos_400.values()),
         total_600=sum(len(v) for v in bachilleratos_600.values()),
         otros_grupos=otros_grupos,
-        usuarios=todos_los_usuarios
+        usuarios=todos_los_usuarios,
+        es_admin=(session.get('rol') == 'admin'),
     )
 
 @app.route('/api/login', methods=['POST'])
@@ -740,32 +764,26 @@ def admin_cloud_panel():
     scope       = session.get('cloud_scope',        'local')
     preparatoria= session.get('cloud_preparatoria')
 
-    todos_los_resultados = db_cloud.obtener_resultados_filtrados(scope, preparatoria)
+    todos_los_alumnos   = db_cloud.obtener_estudiantes_con_estado(scope, preparatoria)
     todos_los_usuarios   = db_cloud.obtener_usuarios_filtrados(scope, preparatoria)
     preparatorias_lista  = db_cloud.obtener_preparatorias()
 
-    # Clasificar resultados por semestre y bachillerato
     bachilleratos_400 = {}
     bachilleratos_600 = {}
     otros_grupos = []
 
-    for alumno in todos_los_resultados:
-        campo_semestre = alumno.get("semestre")
+    for alumno in todos_los_alumnos:
         uid_str = str(alumno.get("usuario_id", ""))
-        semestre, bach = _clasificar_semestre(uid_str)
-        if campo_semestre == "4":
-            semestre = "400"
-        elif campo_semestre == "6":
-            semestre = "600"
+        semestre, clasificacion = _clasificar_semestre(uid_str)
         if semestre == "400":
-            bachilleratos_400.setdefault(bach or "0", []).append(alumno)
+            bachilleratos_400.setdefault(clasificacion or "0", []).append(alumno)
         elif semestre == "600":
-            bachilleratos_600.setdefault(bach or "0", []).append(alumno)
+            bachilleratos_600.setdefault(clasificacion or "0", []).append(alumno)
         else:
             otros_grupos.append(alumno)
 
-    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
-    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]))
+    bachilleratos_400 = dict(sorted(bachilleratos_400.items(), key=lambda x: _sort_clasificacion(x[0])))
+    bachilleratos_600 = dict(sorted(bachilleratos_600.items(), key=lambda x: _sort_clasificacion(x[0])))
 
     return render_template(
         'admin.html',
@@ -778,6 +796,7 @@ def admin_cloud_panel():
         scope=scope,
         preparatoria_activa=preparatoria,
         preparatorias=preparatorias_lista,
+        es_admin=(session.get('rol') == 'admin'),
     )
 
 

@@ -22,15 +22,15 @@
         <button class="tab-btn" onclick="openGroupTab(event, 'tab-otros')">
             <i data-lucide="user-plus"></i> Otros / Invitados
         </button>
-        
-        {# CONTROL DE ACCESO: Solo el administrador supremo ve el botón de gestión de cuentas #}
-        {% if session.get('rol') == 'admin' %}
+
+        {% if es_admin %}
         <button class="tab-btn" onclick="openGroupTab(event, 'tab-usuarios')" style="margin-left: auto; background: rgba(45, 212, 191, 0.1); border: 1px solid var(--color-primary);">
             <i data-lucide="users"></i> Usuarios Registrados
         </button>
         {% endif %}
     </div>
 
+    {# ══ TAB 4to SEMESTRE ══ #}
     <div id="tab-400" class="group-tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h3 style="margin: 0;">Resultados: 4to Semestre ({{ total_400 }})</h3>
@@ -38,45 +38,94 @@
                 <i data-lucide="download"></i> Descargar PDF Semestre 400
             </a>
         </div>
+
+        {# ── Resumen por grupo (solo admins) ── #}
+        {% if es_admin and bachilleratos_400 %}
+        <div class="grupos-resumen">
+            {% for grupo, alumnos in bachilleratos_400.items() %}
+            {% set respondidos = alumnos | selectattr('resultado') | list | length %}
+            {% set sin_contestar = alumnos | length - respondidos %}
+            <div class="grupo-card" onclick="filtrarGrupo('400', '{{ grupo }}', this)" style="cursor:pointer;" data-grupo="{{ grupo }}">
+                <div class="grupo-card-letra">{{ grupo }}</div>
+                <div class="grupo-card-stats">
+                    <span class="stat-total">{{ alumnos | length }} códigos</span>
+                    <span class="stat-ok">{{ respondidos }} respondidos</span>
+                    <span class="stat-pend">{{ sin_contestar }} sin contestar</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="filtro-bar" id="filtros-400">
+            <button class="filtro-btn active" onclick="filtrarGrupo('400', null, this)">Todos</button>
+            {% for grupo in bachilleratos_400.keys() %}
+            <button class="filtro-btn" onclick="filtrarGrupo('400', '{{ grupo }}', this)" data-grupo="{{ grupo }}">Grupo {{ grupo }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {% if bachilleratos_400 %}
         <div style="overflow-x: auto;">
-            <table class="data-table">
+            <table class="data-table" id="tabla-400">
                 <thead>
                     <tr>
                         <th>ID Usuario</th>
-                        <th style="width:90px;">Est.</th>
+                        {% if es_admin %}<th style="width:80px; text-align:center;">Grupo</th>{% endif %}
+                        <th style="width:130px;">Estado</th>
                         <th>Carrera Principal</th>
                         <th>Otras Opciones</th>
                         <th style="width:110px; text-align:center;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for bach_num, alumnos in bachilleratos_400.items() %}
-                    {% for res in alumnos %}
-                    <tr id="row-res-{{ res.usuario_id }}">
-                        <td>{{ res.usuario_id }}</td>
-                        <td style="font-size:0.82rem; color:var(--color-primary);">Est. {{ bach_num }}</td>
-                        {% if res.resultado %}
-                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                    {% for grupo, alumnos in bachilleratos_400.items() %}
+                    {% if es_admin %}
+                    <tr class="grupo-separador" data-grupo="{{ grupo }}">
+                        <td colspan="6">
+                            <i data-lucide="users" style="width:14px;height:14px;vertical-align:middle;margin-right:6px;"></i>
+                            <strong>Grupo {{ grupo }}</strong>
+                            &nbsp;—&nbsp;{{ alumnos|length }} estudiantes
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% for alumno in alumnos %}
+                    <tr id="row-res-{{ alumno.usuario_id }}" data-grupo="{{ grupo }}">
+                        <td>{{ alumno.usuario_id }}</td>
+                        {% if es_admin %}
+                        <td style="text-align:center;">
+                            <span class="grupo-badge">{{ grupo }}</span>
+                        </td>
+                        {% endif %}
+                        <td>
+                            {% if alumno.resultado %}
+                            <span class="badge-estado respondido">Respondido</span>
+                            {% else %}
+                            <span class="badge-estado sin-contestar">Sin contestar</span>
+                            {% endif %}
+                        </td>
+                        {% if alumno.resultado %}
+                            <td><strong>{{ alumno.resultado.carrera_principal }}</strong></td>
                             <td>
                                 <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
-                                {% for opcion in res.resultado.otras_carreras %}
+                                {% for opcion in alumno.resultado.otras_carreras %}
                                     <li>{{ opcion.Carrera }}</li>
                                 {% endfor %}
                                 </ul>
                             </td>
                         {% else %}
-                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Test no finalizado</td>
+                            <td colspan="2" style="color: #94a3b8; font-size: 0.88rem;">—</td>
                         {% endif %}
                         <td style="text-align:center; white-space:nowrap;">
-                            {% if res.resultado %}
-                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ res.usuario_id }}')" title="Ver respuestas">
+                            {% if alumno.resultado %}
+                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ alumno.usuario_id }}')" title="Ver respuestas">
                                 <i data-lucide="eye"></i>
                             </button>
                             {% endif %}
-                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ res.usuario_id }}')" title="Eliminar resultado">
+                            {% if alumno.resultado %}
+                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ alumno.usuario_id }}')" title="Eliminar resultado">
                                 <i data-lucide="trash-2"></i>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -85,10 +134,11 @@
             </table>
         </div>
         {% else %}
-        <p style="text-align: center; color: #94a3b8; padding: 40px 0;">Sin resultados de 4to semestre.</p>
+        <p style="text-align: center; color: #94a3b8; padding: 40px 0;">Sin estudiantes registrados en 4to semestre.</p>
         {% endif %}
     </div>
 
+    {# ══ TAB 6to SEMESTRE ══ #}
     <div id="tab-600" class="group-tab-content" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h3 style="margin: 0;">Resultados: 6to Semestre ({{ total_600 }})</h3>
@@ -96,45 +146,91 @@
                 <i data-lucide="download"></i> Descargar PDF Semestre 600
             </a>
         </div>
+
+        {% if es_admin and bachilleratos_600 %}
+        <div class="grupos-resumen">
+            {% for grupo, alumnos in bachilleratos_600.items() %}
+            {% set respondidos = alumnos | selectattr('resultado') | list | length %}
+            {% set sin_contestar = alumnos | length - respondidos %}
+            <div class="grupo-card" onclick="filtrarGrupo('600', '{{ grupo }}', this)" style="cursor:pointer;" data-grupo="{{ grupo }}">
+                <div class="grupo-card-letra">{{ grupo }}</div>
+                <div class="grupo-card-stats">
+                    <span class="stat-total">{{ alumnos | length }} códigos</span>
+                    <span class="stat-ok">{{ respondidos }} respondidos</span>
+                    <span class="stat-pend">{{ sin_contestar }} sin contestar</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="filtro-bar" id="filtros-600">
+            <button class="filtro-btn active" onclick="filtrarGrupo('600', null, this)">Todos</button>
+            {% for grupo in bachilleratos_600.keys() %}
+            <button class="filtro-btn" onclick="filtrarGrupo('600', '{{ grupo }}', this)" data-grupo="{{ grupo }}">Grupo {{ grupo }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {% if bachilleratos_600 %}
         <div style="overflow-x: auto;">
-            <table class="data-table">
+            <table class="data-table" id="tabla-600">
                 <thead>
                     <tr>
                         <th>ID Usuario</th>
-                        <th style="width:90px;">Est.</th>
+                        {% if es_admin %}<th style="width:80px; text-align:center;">Grupo</th>{% endif %}
+                        <th style="width:130px;">Estado</th>
                         <th>Carrera Principal</th>
                         <th>Otras Opciones</th>
                         <th style="width:110px; text-align:center;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for bach_num, alumnos in bachilleratos_600.items() %}
-                    {% for res in alumnos %}
-                    <tr id="row-res-{{ res.usuario_id }}">
-                        <td>{{ res.usuario_id }}</td>
-                        <td style="font-size:0.82rem; color:var(--color-primary);">Est. {{ bach_num }}</td>
-                        {% if res.resultado %}
-                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                    {% for grupo, alumnos in bachilleratos_600.items() %}
+                    {% if es_admin %}
+                    <tr class="grupo-separador" data-grupo="{{ grupo }}">
+                        <td colspan="6">
+                            <i data-lucide="users" style="width:14px;height:14px;vertical-align:middle;margin-right:6px;"></i>
+                            <strong>Grupo {{ grupo }}</strong>
+                            &nbsp;—&nbsp;{{ alumnos|length }} estudiantes
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% for alumno in alumnos %}
+                    <tr id="row-res-{{ alumno.usuario_id }}" data-grupo="{{ grupo }}">
+                        <td>{{ alumno.usuario_id }}</td>
+                        {% if es_admin %}
+                        <td style="text-align:center;">
+                            <span class="grupo-badge">{{ grupo }}</span>
+                        </td>
+                        {% endif %}
+                        <td>
+                            {% if alumno.resultado %}
+                            <span class="badge-estado respondido">Respondido</span>
+                            {% else %}
+                            <span class="badge-estado sin-contestar">Sin contestar</span>
+                            {% endif %}
+                        </td>
+                        {% if alumno.resultado %}
+                            <td><strong>{{ alumno.resultado.carrera_principal }}</strong></td>
                             <td>
                                 <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
-                                {% for opcion in res.resultado.otras_carreras %}
+                                {% for opcion in alumno.resultado.otras_carreras %}
                                     <li>{{ opcion.Carrera }}</li>
                                 {% endfor %}
                                 </ul>
                             </td>
                         {% else %}
-                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Test no finalizado</td>
+                            <td colspan="2" style="color: #94a3b8; font-size: 0.88rem;">—</td>
                         {% endif %}
                         <td style="text-align:center; white-space:nowrap;">
-                            {% if res.resultado %}
-                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ res.usuario_id }}')" title="Ver respuestas">
+                            {% if alumno.resultado %}
+                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ alumno.usuario_id }}')" title="Ver respuestas">
                                 <i data-lucide="eye"></i>
                             </button>
-                            {% endif %}
-                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ res.usuario_id }}')" title="Eliminar resultado">
+                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ alumno.usuario_id }}')" title="Eliminar resultado">
                                 <i data-lucide="trash-2"></i>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -143,10 +239,11 @@
             </table>
         </div>
         {% else %}
-        <p style="text-align: center; color: #94a3b8; padding: 40px 0;">Sin resultados de 6to semestre.</p>
+        <p style="text-align: center; color: #94a3b8; padding: 40px 0;">Sin estudiantes registrados en 6to semestre.</p>
         {% endif %}
     </div>
 
+    {# ══ TAB OTROS / INVITADOS ══ #}
     <div id="tab-otros" class="group-tab-content" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <h3 style="margin: 0;">Otros / Invitados ({{ otros_grupos|length }})</h3>
@@ -159,36 +256,44 @@
                 <thead>
                     <tr>
                         <th>ID Usuario</th>
+                        <th style="width:130px;">Estado</th>
                         <th>Carrera Principal</th>
                         <th>Otras Opciones</th>
                         <th style="width:80px; text-align:center;">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for res in otros_grupos %}
-                    <tr id="row-res-{{ res.usuario_id }}">
-                        <td>{{ res.usuario_id }}</td>
-                        {% if res.resultado %}
-                            <td><strong>{{ res.resultado.carrera_principal }}</strong></td>
+                    {% for alumno in otros_grupos %}
+                    <tr id="row-res-{{ alumno.usuario_id }}">
+                        <td>{{ alumno.usuario_id }}</td>
+                        <td>
+                            {% if alumno.resultado %}
+                            <span class="badge-estado respondido">Respondido</span>
+                            {% else %}
+                            <span class="badge-estado sin-contestar">Sin contestar</span>
+                            {% endif %}
+                        </td>
+                        {% if alumno.resultado %}
+                            <td><strong>{{ alumno.resultado.carrera_principal }}</strong></td>
                             <td>
                                 <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
-                                {% for opcion in res.resultado.otras_carreras %}
+                                {% for opcion in alumno.resultado.otras_carreras %}
                                     <li>{{ opcion.Carrera }}</li>
                                 {% endfor %}
                                 </ul>
                             </td>
                         {% else %}
-                            <td colspan="2" style="color: #ef4444; opacity: 0.8;">Sin datos de análisis</td>
+                            <td colspan="2" style="color: #94a3b8; font-size: 0.88rem;">—</td>
                         {% endif %}
                         <td style="text-align:center; white-space:nowrap;">
-                            {% if res.resultado %}
-                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ res.usuario_id }}')" title="Ver respuestas">
+                            {% if alumno.resultado %}
+                            <button class="btn-ver-respuestas" onclick="verRespuestas('{{ alumno.usuario_id }}')" title="Ver respuestas">
                                 <i data-lucide="eye"></i>
                             </button>
-                            {% endif %}
-                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ res.usuario_id }}')" title="Eliminar resultado">
+                            <button class="btn-delete-resultado" onclick="confirmarEliminarResultado('{{ alumno.usuario_id }}')" title="Eliminar resultado">
                                 <i data-lucide="trash-2"></i>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -197,14 +302,14 @@
         </div>
     </div>
 
-    {# CONTROL DE ACCESO INTERNO: El formulario y la lista solo se procesan para administradores #}
-    {% if session.get('rol') == 'admin' %}
+    {# ══ TAB GESTIÓN DE USUARIOS (solo admins) ══ #}
+    {% if es_admin %}
     <div id="tab-usuarios" class="group-tab-content" style="display: none;">
-        
+
         <div style="background: rgba(0, 0, 0, 0.02); border: 1px solid var(--color-border); padding: 25px; border-radius: 12px; margin-bottom: 30px;">
             <h4 style="margin-top: 0; margin-bottom: 5px; color: var(--color-text);">Registrar Nuevo Personal Docente</h4>
             <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 20px;">Las cuentas creadas desde este panel tendrán privilegios exclusivos de lectura sobre las estadísticas de los grupos escolares.</p>
-            
+
             <form action="/admin/agregar-maestro" method="POST" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
                 <div style="display: flex; flex-direction: column; gap: 6px;">
                     <label style="font-size: 0.8rem; font-weight: 600; color: #64748b;">ID del Maestro</label>
@@ -317,6 +422,7 @@
 
 {% block extra_js %}
 <style>
+/* ── Botones de acción ── */
 .btn-ver-respuestas {
     background: transparent;
     border: 1px solid rgba(45,212,191,0.35);
@@ -352,9 +458,174 @@
 .btn-delete-resultado i { width:15px; height:15px; }
 #modal-eliminar { display: none; }
 #modal-eliminar.visible { display: flex; }
+
+/* ── Badges de estado ── */
+.badge-estado {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.badge-estado.respondido {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-estado.sin-contestar {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* ── Badge de grupo ── */
+.grupo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--color-primary, #2dd4bf);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+}
+
+/* ── Separador de grupo en tabla ── */
+.grupo-separador td {
+    background: rgba(45, 212, 191, 0.05);
+    border-left: 3px solid var(--color-primary, #2dd4bf);
+    padding: 8px 14px !important;
+    font-size: 0.85rem;
+    color: var(--color-primary, #2dd4bf);
+}
+
+/* ── Tarjetas de resumen por grupo ── */
+.grupos-resumen {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.grupo-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(45, 212, 191, 0.06);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    min-width: 170px;
+    flex: 1;
+}
+.grupo-card-letra {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-primary, #2dd4bf);
+    line-height: 1;
+    width: 36px;
+    text-align: center;
+}
+.grupo-card-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.stat-total {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+.stat-ok {
+    font-size: 0.78rem;
+    color: #10b981;
+}
+.stat-pend {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+/* ── Grupo card clicable (activo al filtrar) ── */
+.grupo-card.card-activa {
+    background: rgba(45, 212, 191, 0.18);
+    border-color: var(--color-primary, #2dd4bf);
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.25);
+}
+
+/* ── Barra de filtros ── */
+.filtro-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+}
+.filtro-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    font-size: 0.83rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.filtro-btn:hover {
+    background: rgba(45, 212, 191, 0.08);
+    border-color: rgba(45, 212, 191, 0.4);
+}
+.filtro-btn.active {
+    background: rgba(45, 212, 191, 0.15);
+    border-color: var(--color-primary, #2dd4bf);
+    color: var(--color-primary, #2dd4bf);
+    font-weight: 600;
+}
 </style>
 
 <script>
+/* ── Filtro por grupo ── */
+function filtrarGrupo(semestre, grupo, origen) {
+    // Actualizar botones de la barra
+    const barraId = `filtros-${semestre}`;
+    const barra = document.getElementById(barraId);
+    if (barra) {
+        barra.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+        // Activar el botón correcto
+        if (grupo === null) {
+            const btnTodos = barra.querySelector('.filtro-btn:first-child');
+            if (btnTodos) btnTodos.classList.add('active');
+        } else {
+            const btnGrupo = barra.querySelector(`.filtro-btn[data-grupo="${grupo}"]`);
+            if (btnGrupo) btnGrupo.classList.add('active');
+        }
+    }
+
+    // Actualizar tarjetas de resumen
+    const tabEl = document.getElementById(`tab-${semestre}`);
+    if (tabEl) {
+        tabEl.querySelectorAll('.grupo-card').forEach(card => {
+            card.classList.remove('card-activa');
+            if (grupo !== null && card.dataset.grupo === grupo) {
+                card.classList.add('card-activa');
+            }
+        });
+    }
+
+    // Mostrar u ocultar filas de la tabla
+    const tabla = document.getElementById(`tabla-${semestre}`);
+    if (!tabla) return;
+    tabla.querySelectorAll('tbody tr').forEach(row => {
+        if (grupo === null) {
+            row.style.display = '';
+        } else {
+            row.style.display = (row.dataset.grupo === grupo) ? '' : 'none';
+        }
+    });
+}
+
 /* ── Tabs ── */
 function openGroupTab(evt, tabId) {
     document.querySelectorAll('.group-tab-content').forEach(c => c.style.display = 'none');
@@ -368,9 +639,10 @@ function openGroupTab(evt, tabId) {
     const tab = document.getElementById(tabId);
     if (tab) tab.style.display = 'block';
     evt.currentTarget.classList.add('active');
+    if (window.lucide) lucide.createIcons();
 }
 
-/* ── Modal ── */
+/* ── Modal de confirmación ── */
 let _eliminarCallback = null;
 
 function abrirModal(descripcion, callback) {
@@ -389,7 +661,6 @@ function cerrarModal() {
     _eliminarCallback = null;
 }
 
-// Cerrar al hacer clic fuera del cuadro
 document.getElementById('modal-eliminar').addEventListener('click', function(e) {
     if (e.target === this) cerrarModal();
 });
@@ -409,11 +680,35 @@ async function ejecutarEliminarResultado(usuarioId) {
         });
         const data = await res.json();
         if (data.success) {
+            // Revertir la fila al estado "Sin contestar" en lugar de eliminarla
             const fila = document.getElementById(`row-res-${usuarioId}`);
             if (fila) {
-                fila.style.transition = 'opacity 0.3s';
-                fila.style.opacity = '0';
-                setTimeout(() => fila.remove(), 300);
+                const celdas = fila.querySelectorAll('td');
+                // Actualizar badge de estado
+                const badgeCell = fila.querySelector('.badge-estado');
+                if (badgeCell) {
+                    badgeCell.className = 'badge-estado sin-contestar';
+                    badgeCell.textContent = 'Sin contestar';
+                }
+                // Ocultar botones de acción
+                const acciones = fila.querySelector('td:last-child');
+                if (acciones) acciones.innerHTML = '';
+                // Limpiar carrera y opciones (buscar td con strong)
+                const tdFuerte = fila.querySelector('td strong');
+                if (tdFuerte) {
+                    const tdCarrera = tdFuerte.parentElement;
+                    const tdOpciones = tdCarrera ? tdCarrera.nextElementSibling : null;
+                    if (tdCarrera) {
+                        tdCarrera.innerHTML = '';
+                        tdCarrera.setAttribute('colspan', '2');
+                        tdCarrera.style.color = '#94a3b8';
+                        tdCarrera.textContent = '—';
+                    }
+                    if (tdOpciones && !tdCarrera.hasAttribute('data-merged')) {
+                        tdOpciones.remove();
+                        tdCarrera.setAttribute('data-merged', '1');
+                    }
+                }
             }
         } else {
             alert('Error: ' + (data.error || 'No se pudo eliminar.'));

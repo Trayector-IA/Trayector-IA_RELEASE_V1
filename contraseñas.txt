@@ -1,0 +1,19 @@
+cpo_001	CPO_Admin2024!
+cpo_002	CPO_Admin2024!
+cpo_003	CPO_Admin2024!
+cpo_004	CPO_Admin2024!
+cpo_005	CPO_Admin2024!
+isecf_001	ISECF_Admin2024!
+isecf_002	ISECF_Admin2024!
+isecf_003	ISECF_Admin2024!
+isecf_004	ISECF_Admin2024!
+isecf_005	ISECF_Admin2024!
+bc_001	BC_Admin2024!
+bc_002	BC_Admin2024!
+bc_003	BC_Admin2024!
+bc_004	BC_Admin2024!
+bc_005	BC_Admin2024!
+
+admin_global_001	GlobalAdmin2024!
+admin_global_002	GlobalAdmin2024!
+admin_global_003	GlobalAdmin2024!

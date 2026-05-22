@@ -2,19 +2,62 @@
 {% block title %}Iniciar Sesión — Trayector-IA{% endblock %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 100px auto; padding: 40px 30px; background: var(--bg-card, rgba(255,255,255,0.05)); border-radius: 12px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); text-align: center;">
-    
-    <h2 style="margin-bottom: 10px;">Acceso al Sistema</h2>
-    <p style="margin-bottom: 30px; font-size: 0.9rem; opacity: 0.8;">Ingresa tus credenciales para continuar.</p>
-    
-    <input type="text" id="login-usuario" placeholder="ID de Usuario" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
-    
-    <input type="password" id="login-password" placeholder="Contraseña (solo admin)" style="width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
-    
-    <button onclick="procesarLogin()" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: bold;">Ingresar</button>
-    
-    <p id="login-error" style="color: #ef4444; margin-top: 15px; display: none; font-size: 0.9rem;"></p>
-</div>
+<section class="login-shell">
+    <div class="login-visual">
+        <span class="login-badge">Acceso seguro</span>
+        <h1>Acceso al Sistema</h1>
+        <p class="login-lede">Ingresa con tus credenciales institucionales para consultar paneles y reportes.</p>
+
+        <div class="login-points">
+            <div class="login-point">
+                <span class="login-point-icon"><i data-lucide="shield-check"></i></span>
+                <div>
+                    <h3>Validacion protegida</h3>
+                    <p>Autenticacion en tiempo real con permisos por rol.</p>
+                </div>
+            </div>
+            <div class="login-point">
+                <span class="login-point-icon"><i data-lucide="sparkles"></i></span>
+                <div>
+                    <h3>Paneles inteligentes</h3>
+                    <p>Accede a reportes vocacionales con vistas claras y actuales.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-card">
+        <div class="login-card-header">
+            <h2>Iniciar sesion</h2>
+            <p>Ingresa tu ID y contrasena para continuar.</p>
+        </div>
+
+        <form class="login-form" onsubmit="event.preventDefault(); procesarLogin();">
+            <label class="login-label" for="login-usuario">ID de Usuario</label>
+            <input
+                type="text"
+                id="login-usuario"
+                class="login-field"
+                placeholder="Ej. 009"
+                autocomplete="username"
+                inputmode="numeric"
+            />
+
+            <label class="login-label" for="login-password">Contrasena</label>
+            <input
+                type="password"
+                id="login-password"
+                class="login-field"
+                placeholder="Solo personal autorizado"
+                autocomplete="current-password"
+            />
+
+            <button type="submit" class="btn btn-primary login-action">Ingresar</button>
+            <p class="login-hint">Si eres alumno, usa tu ID para continuar el orientador.</p>
+            <p id="login-error" class="login-error" role="alert" aria-live="polite"></p>
+        </form>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}

@@ -32,6 +32,24 @@ ADMINS_POR_PREPA = 5
 ADMINS_GLOBALES  = 3
 MAX_SESIONES     = 2
 
+# Grupos CPO serie 400: 5 grupos de 60 alumnos cada uno (401-460)
+CPO_GRUPOS_400 = {
+    "a": range(401, 461),  # cpo_a_401 … cpo_a_460
+    "b": range(401, 461),  # cpo_b_401 … cpo_b_460
+    "c": range(401, 461),  # cpo_c_401 … cpo_c_460
+    "d": range(401, 461),  # cpo_d_401 … cpo_d_460
+    "e": range(401, 461),  # cpo_e_401 … cpo_e_460
+}
+
+# Grupos CPO serie 600: 5 grupos de 60 alumnos cada uno (601-660)
+CPO_GRUPOS_600 = {
+    "a": range(601, 661),  # cpo_a_601 … cpo_a_660
+    "b": range(601, 661),  # cpo_b_601 … cpo_b_660
+    "c": range(601, 661),  # cpo_c_601 … cpo_c_660
+    "d": range(601, 661),  # cpo_d_601 … cpo_d_660
+    "e": range(601, 661),  # cpo_e_601 … cpo_e_660
+}
+
 ORIGEN  = "agente_vocacional"
 DESTINO = "agente_vocacional_cloud"
 
@@ -163,6 +181,49 @@ def main():
 
     total_admins = len(credenciales)
     print(f"\n  Total admins creados: {total_admins}")
+
+    # ── 8. Estudiantes CPO serie 400 (cpo_a_401 … cpo_e_460) ─────────────────
+    print(f"\n{'='*60}")
+    print("  Registrando estudiantes CPO (series 400, grupos A-E)")
+    print(f"{'='*60}")
+
+    total_estudiantes = 0
+    for grupo, numeros in CPO_GRUPOS_400.items():
+        for num in numeros:
+            uid = f"cpo_{grupo}_{num}"
+            usuarios_col.delete_one({"usuario_id": uid})
+            usuarios_col.insert_one({
+                "usuario_id":      uid,
+                "rol":             "estudiante",
+                "preparatoria":    "cpo",
+                "grupo":           grupo.upper(),
+                "test_completado": False,
+            })
+            total_estudiantes += 1
+        rango = list(numeros)
+        print(f"  ✓ Grupo {grupo.upper()}: cpo_{grupo}_{rango[0]} … cpo_{grupo}_{rango[-1]}  ({len(rango)} alumnos)")
+
+    # ── 9. Estudiantes CPO serie 600 (cpo_a_601 … cpo_e_660) ─────────────────
+    print(f"\n{'='*60}")
+    print("  Registrando estudiantes CPO (series 600, grupos A-E)")
+    print(f"{'='*60}")
+
+    for grupo, numeros in CPO_GRUPOS_600.items():
+        for num in numeros:
+            uid = f"cpo_{grupo}_{num}"
+            usuarios_col.delete_one({"usuario_id": uid})
+            usuarios_col.insert_one({
+                "usuario_id":      uid,
+                "rol":             "estudiante",
+                "preparatoria":    "cpo",
+                "grupo":           grupo.upper(),
+                "test_completado": False,
+            })
+            total_estudiantes += 1
+        rango = list(numeros)
+        print(f"  ✓ Grupo {grupo.upper()}: cpo_{grupo}_{rango[0]} … cpo_{grupo}_{rango[-1]}  ({len(rango)} alumnos)")
+
+    print(f"\n  Total estudiantes CPO registrados: {total_estudiantes}")
     print(f"  Base de datos '{DESTINO}' configurada exitosamente.\n")
 
     client.close()
